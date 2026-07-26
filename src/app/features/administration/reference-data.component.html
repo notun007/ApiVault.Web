@@ -1,0 +1,30 @@
+<app-page-header title="Reference data" eyebrow="Administrative configuration" description="Maintain the business areas and development teams used to classify APIs and projects."></app-page-header>
+
+<section class="admin-grid">
+  <article class="panel">
+    <header class="panel-header"><div><span class="eyebrow">Business classification</span><h2>Business areas</h2><p>{{ businessAreas().length }} entries</p></div><button class="button button-primary button-small" type="button" (click)="open('business')">+ Add business</button></header>
+    <div class="lookup-list">
+      @for (item of businessAreas(); track item.id) { <div class="lookup-item"><span class="lookup-code">{{ item.code }}</span><div><strong>{{ item.name }}</strong><small>{{ item.id }}</small></div></div> }
+      @empty { <app-empty-state symbol="BA" title="No business areas" message="Add the first business classification."></app-empty-state> }
+    </div>
+  </article>
+
+  <article class="panel">
+    <header class="panel-header"><div><span class="eyebrow">Technical ownership</span><h2>Development teams</h2><p>{{ teams().length }} entries</p></div><button class="button button-primary button-small" type="button" (click)="open('team')">+ Add team</button></header>
+    <div class="lookup-list">
+      @for (item of teams(); track item.id) { <div class="lookup-item"><span class="lookup-code">{{ item.code }}</span><div><strong>{{ item.name }}</strong><small>{{ item.id }}</small></div></div> }
+      @empty { <app-empty-state symbol="TM" title="No development teams" message="Add the first technical owner team."></app-empty-state> }
+    </div>
+  </article>
+</section>
+
+<app-modal [open]="modalOpen()" [title]="mode() === 'business' ? 'Add business area' : 'Add development team'" eyebrow="Reference data" (closed)="modalOpen.set(false)">
+  <form class="modal-form" [formGroup]="form" (ngSubmit)="save()">
+    <label class="field"><span>Code *</span><input class="input code-input" formControlName="code" placeholder="e.g. RETAIL"></label>
+    <label class="field"><span>Name *</span><input class="input" formControlName="name" placeholder="Display name"></label>
+    <label class="field"><span>Description</span><textarea class="textarea" rows="4" formControlName="description"></textarea></label>
+    <label class="field"><span>Contact email</span><input class="input" type="email" formControlName="contactEmail" placeholder="team@bank.com"></label>
+    @if (modalError()) { <div class="inline-alert error">{{ modalError() }}</div> }
+    <div class="modal-actions"><button class="button button-ghost" type="button" (click)="modalOpen.set(false)">Cancel</button><button class="button button-primary" type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save entry' }}</button></div>
+  </form>
+</app-modal>

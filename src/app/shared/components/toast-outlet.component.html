@@ -1,0 +1,12 @@
+<div class="toast-stack" aria-live="polite" aria-atomic="true">
+  @for (toast of toastService.messages(); track toast.id) {
+    <article class="toast" [class]="'toast toast-' + toast.type">
+      <div class="toast-mark"></div>
+      <div class="toast-copy">
+        <strong>{{ toast.title }}</strong>
+        @if (toast.message) { <p>{{ toast.message }}</p> }
+      </div>
+      <button type="button" class="icon-button" aria-label="Dismiss" (click)="toastService.dismiss(toast.id)">×</button>
+    </article>
+  }
+</div>

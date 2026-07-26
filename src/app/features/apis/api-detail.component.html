@@ -1,0 +1,171 @@
+@if (loading()) {
+  <div class="detail-loading"><div class="spinner"></div><span>Loading API governance record…</span></div>
+} @else if (api(); as item) {
+  <app-page-header [title]="item.name" [eyebrow]="item.apiProjectName" [description]="item.description || 'No description has been provided for this API.'">
+    <a class="button button-ghost" routerLink="/apis">← Catalog</a>
+    @if (canManage()) { <a class="button button-ghost" [routerLink]="['/apis', item.id, 'edit']">Edit API</a><button class="button button-primary" type="button" (click)="openCreateVersion()">+ Add release</button> }
+  </app-page-header>
+
+  <section class="identity-strip">
+    <div><span>Ownership</span><strong>{{ item.ownershipType | enumLabel }}</strong></div>
+    <div><span>API type</span><strong>{{ item.protocol | enumLabel }}</strong></div>
+    <div><span>Business</span><strong>{{ item.businessArea.name }}</strong></div>
+    <div><span>Development team</span><strong>{{ item.developmentTeam.name }}</strong></div>
+    <div><span>Creator</span><strong>{{ item.creatorName }}</strong><small>{{ item.creatorEmail || 'No email' }}</small></div>
+    <div><span>Vendor</span><strong>{{ item.vendorName || 'In-house' }}</strong></div>
+  </section>
+
+  @if (item.externalReferenceUrl) { <div class="inline-alert info"><strong>External documentation</strong><a [href]="item.externalReferenceUrl" target="_blank" rel="noopener">{{ item.externalReferenceUrl }}</a></div> }
+
+  <section class="version-workspace">
+    <aside class="version-sidebar panel">
+      <header><span class="eyebrow">Release registry</span><h2>Versions</h2><p>{{ item.versions.length }} registered</p></header>
+      <div class="version-list">
+        @for (version of sortedVersions(); track version.id) {
+          <button type="button" [class.active]="selectedVersionId() === version.id" (click)="selectedVersionId.set(version.id)">
+            <div><strong>v{{ version.version }}</strong>@if (version.isCurrent) { <span class="current-dot">Current</span> }</div>
+            <span>{{ version.releaseName || 'Unnamed release' }}</span>
+            <small class="badge mini" [class]="'badge mini ' + statusClass(version.lifecycleStatus)">{{ version.lifecycleStatus }}</small>
+          </button>
+        } @empty {
+          <app-empty-state symbol="V" title="No releases" message="Add the first version to define endpoints and environments."></app-empty-state>
+        }
+      </div>
+    </aside>
+
+    <div class="version-content">
+      @if (selectedVersion(); as version) {
+        <section class="panel version-hero">
+          <div class="version-title">
+            <div><span class="eyebrow">Selected release</span><h2>v{{ version.version }} <small>{{ version.releaseName }}</small></h2></div>
+            <div class="version-actions">
+              <a class="button button-ghost button-small" [routerLink]="['/apis', item.id, 'versions', version.id, 'reference']">Scalar reference</a>
+              @if (canManage()) { <button type="button" class="button button-ghost button-small" (click)="openEditVersion(version)">Edit metadata</button> }
+            </div>
+          </div>
+          <div class="release-metrics">
+            <div><span>Lifecycle</span><strong><span class="badge" [class]="'badge ' + statusClass(version.lifecycleStatus)">{{ version.lifecycleStatus }}</span></strong></div>
+            <div><span>Release date</span><strong>{{ version.releaseDateUtc ? (formatDate(version.releaseDateUtc)) : 'Not set' }}</strong></div>
+            <div><span>Authentication</span><strong>{{ version.authenticationType | enumLabel }}</strong></div>
+            <div><span>Timeout</span><strong>{{ version.timeoutSeconds }} seconds</strong></div>
+            <div><span>Request ceiling</span><strong>{{ formatter.byteSize(version.maxRequestBytes) }}</strong></div>
+            <div><span>Response ceiling</span><strong>{{ formatter.byteSize(version.maxResponseBytes) }}</strong></div>
+          </div>
+          @if (canManage()) {
+            <div class="lifecycle-control">
+              <label class="field inline-field"><span>Move lifecycle forward</span><select class="select" [value]="version.lifecycleStatus" #lifecycleSelect>@for (status of lifecycleStatuses; track status) { <option [value]="status" [disabled]="lifecycleOrder(status) < lifecycleOrder(version.lifecycleStatus)">{{ status }}</option> }</select></label>
+              <button class="button button-secondary" type="button" [disabled]="lifecycleSelect.value === version.lifecycleStatus" (click)="changeLifecycle(version, lifecycleSelect.value)">Update lifecycle</button>
+            </div>
+          }
+        </section>
+
+        <section class="panel">
+          <header class="panel-header"><div><span class="eyebrow">Interface contract</span><h2>Endpoints</h2><p>Relative paths, methods, schemas, samples, and SOAP actions.</p></div>@if (canManage()) { <button type="button" class="button button-primary button-small" (click)="openEndpoint(version)">+ Add endpoint</button> }</header>
+          @if (version.endpoints.length === 0) {
+            <app-empty-state symbol="EP" title="No endpoints registered" message="Add operations for this exact release.">@if (canManage()) { <button type="button" class="button button-primary button-small" (click)="openEndpoint(version)">Add endpoint</button> }</app-empty-state>
+          } @else {
+            <div class="endpoint-list">
+              @for (endpoint of version.endpoints; track endpoint.id) {
+                <article class="endpoint-card">
+                  <div class="method" [class]="'method ' + endpoint.httpMethod.toLowerCase()">{{ endpoint.httpMethod }}</div>
+                  <div class="endpoint-main"><strong>{{ endpoint.name }}</strong><code>{{ endpoint.relativePath }}</code><p>{{ endpoint.description || 'No endpoint description.' }}</p></div>
+                  <div class="endpoint-meta">@if (endpoint.soapAction) { <span>SOAPAction</span><code>{{ endpoint.soapAction }}</code> }</div>
+                  @if (canManage()) { <button type="button" class="button button-ghost button-small" (click)="openEndpoint(version, endpoint)">Edit</button> }
+                </article>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="panel">
+          <header class="panel-header"><div><span class="eyebrow">Deployment targets</span><h2>Environments</h2><p>Track approved base URLs and encrypted secret names for Development, UAT, Production, DR, and Sandbox.</p></div>@if (canManage()) { <button type="button" class="button button-primary button-small" (click)="openEnvironment(version)">+ Add environment</button> }</header>
+          <div class="environment-grid">
+            @for (environment of version.environments; track environment.id) {
+              <article class="environment-card" [class.disabled]="!environment.isEnabled">
+                <header><span class="environment-icon">{{ environmentCode(environment.environmentType) }}</span><div><strong>{{ environment.environmentType | enumLabel }}</strong><small>{{ environment.isEnabled ? 'Enabled' : 'Disabled' }}</small></div></header>
+                <a [href]="environment.baseUrl" target="_blank" rel="noopener">{{ environment.baseUrl }}</a>
+                <p>{{ environment.notes || 'No environment notes.' }}</p>
+                <div class="secret-list"><span>Encrypted secrets</span>@for (secret of environment.secretNames; track secret) { <code>{{ secret }}</code> } @empty { <small>No secrets configured</small> }</div>
+                @if (canManage()) { <footer><button class="button button-ghost button-small" type="button" (click)="openEnvironment(version, environment)">Edit</button><button class="button button-secondary button-small" type="button" (click)="openSecret(version, environment)">Set secret</button></footer> }
+              </article>
+            } @empty {
+              <app-empty-state symbol="EN" title="No environments" message="Register the approved base URLs used by this release."></app-empty-state>
+            }
+          </div>
+        </section>
+
+        <section class="detail-columns">
+          <article class="panel"><header class="panel-header"><div><span class="eyebrow">Access guidance</span><h2>Authentication</h2></div></header><dl class="detail-list"><div><dt>Method</dt><dd>{{ version.authenticationType | enumLabel }}</dd></div><div><dt>Instructions</dt><dd class="pre-wrap">{{ version.authenticationInstructions || 'No instructions supplied.' }}</dd></div><div><dt>Configuration</dt><dd><pre>{{ formatter.prettyJson(version.authenticationConfigJson) || 'No configuration JSON.' }}</pre></dd></div></dl></article>
+          <article class="panel"><header class="panel-header"><div><span class="eyebrow">Release evidence</span><h2>Change log</h2></div></header><div class="prose-box">{{ version.changeLog || 'No change log supplied for this release.' }}</div>@if (version.deprecatedAtUtc) { <div class="timeline-note"><span>Deprecated</span><strong>{{ formatDate(version.deprecatedAtUtc) }}</strong></div> }@if (version.retiredAtUtc) { <div class="timeline-note"><span>Retired</span><strong>{{ formatDate(version.retiredAtUtc) }}</strong></div> }</article>
+        </section>
+      } @else {
+        <section class="panel"><app-empty-state symbol="V" title="Select a version" message="Choose a release to inspect endpoints, environments, authentication, and documentation."></app-empty-state></section>
+      }
+    </div>
+  </section>
+}
+
+<app-modal [open]="versionModalOpen()" [title]="editingVersion() ? 'Edit release metadata' : 'Add API release'" eyebrow="Version governance" [wide]="true" (closed)="closeVersionModal()">
+  <form class="modal-form" [formGroup]="versionForm" (ngSubmit)="saveVersion()">
+    <div class="form-grid two-column">
+      <label class="field"><span>Version *</span><input class="input" formControlName="version" placeholder="e.g. 1.0.0" [readonly]="!!editingVersion()"></label>
+      <label class="field"><span>Release name</span><input class="input" formControlName="releaseName" placeholder="Initial production release"></label>
+      @if (!editingVersion()) { <label class="field"><span>Initial lifecycle</span><select class="select" formControlName="lifecycleStatus">@for (status of lifecycleStatuses; track status) { <option [value]="status">{{ status }}</option> }</select></label> }
+      <label class="field"><span>Release date</span><input class="input" type="date" formControlName="releaseDate"></label>
+      <label class="field"><span>Authentication</span><select class="select" formControlName="authenticationType">@for (type of authenticationTypes; track type) { <option [value]="type">{{ type | enumLabel }}</option> }</select></label>
+      <label class="field"><span>Timeout seconds *</span><input class="input" type="number" min="1" max="300" formControlName="timeoutSeconds"></label>
+      <label class="field"><span>Maximum request bytes *</span><input class="input" type="number" min="1" max="50000000" formControlName="maxRequestBytes"></label>
+      <label class="field"><span>Maximum response bytes *</span><input class="input" type="number" min="1" max="100000000" formControlName="maxResponseBytes"></label>
+      <label class="field field-span"><span>Authentication instructions</span><textarea class="textarea" rows="3" formControlName="authenticationInstructions" placeholder="How consumers obtain and send credentials"></textarea></label>
+      <label class="field field-span"><span>Authentication configuration JSON</span><textarea class="textarea code-input" rows="4" formControlName="authenticationConfigJson" placeholder='{"headerName":"X-API-Key"}'></textarea></label>
+      <label class="field field-span"><span>Change log</span><textarea class="textarea" rows="5" formControlName="changeLog" placeholder="Release changes, compatibility notes, and migration guidance"></textarea></label>
+      <label class="switch-field field-span"><input type="checkbox" formControlName="isCurrent"><span class="switch"></span><div><strong>Mark as current release</strong><small>Other releases for this API will no longer be marked current.</small></div></label>
+    </div>
+    @if (modalError()) { <div class="inline-alert error">{{ modalError() }}</div> }
+    <div class="modal-actions"><button class="button button-ghost" type="button" (click)="closeVersionModal()">Cancel</button><button class="button button-primary" type="submit" [disabled]="modalSaving()">{{ modalSaving() ? 'Saving…' : 'Save release' }}</button></div>
+  </form>
+</app-modal>
+
+<app-modal [open]="endpointModalOpen()" [title]="editingEndpoint() ? 'Edit endpoint' : 'Add endpoint'" eyebrow="Interface contract" [wide]="true" (closed)="endpointModalOpen.set(false)">
+  <form class="modal-form" [formGroup]="endpointForm" (ngSubmit)="saveEndpoint()">
+    <div class="form-grid two-column">
+      <label class="field"><span>Endpoint name *</span><input class="input" formControlName="name" placeholder="Get customer profile"></label>
+      <label class="field"><span>HTTP method *</span><select class="select" formControlName="httpMethod">@for (method of httpMethods; track method) { <option [value]="method">{{ method }}</option> }</select></label>
+      <label class="field field-span"><span>Relative path *</span><input class="input code-input" formControlName="relativePath" placeholder="/customers/{customerId}"></label>
+      <label class="field field-span"><span>Description</span><textarea class="textarea" rows="3" formControlName="description"></textarea></label>
+      <label class="field"><span>Request headers JSON</span><textarea class="textarea code-input" rows="5" formControlName="requestHeadersJson" placeholder='{"Accept":"application/json"}'></textarea></label>
+      <label class="field"><span>Query parameters JSON</span><textarea class="textarea code-input" rows="5" formControlName="queryParametersJson" placeholder='{"includeAccounts":"boolean"}'></textarea></label>
+      <label class="field"><span>Path parameters JSON</span><textarea class="textarea code-input" rows="5" formControlName="pathParametersJson" placeholder='{"customerId":"string"}'></textarea></label>
+      <label class="field"><span>Success status codes JSON</span><textarea class="textarea code-input" rows="5" formControlName="successStatusCodesJson" placeholder='[200, 404]'></textarea></label>
+      <label class="field"><span>Request payload sample</span><textarea class="textarea code-input" rows="7" formControlName="requestPayloadSample"></textarea></label>
+      <label class="field"><span>Sample response body</span><textarea class="textarea code-input" rows="7" formControlName="responseBodySample"></textarea></label>
+      <label class="field"><span>Sample response headers JSON</span><textarea class="textarea code-input" rows="5" formControlName="responseHeadersSampleJson"></textarea></label>
+      <label class="field"><span>SOAPAction</span><input class="input code-input" formControlName="soapAction" placeholder="urn:GetCustomer"></label>
+    </div>
+    @if (modalError()) { <div class="inline-alert error">{{ modalError() }}</div> }
+    <div class="modal-actions"><button class="button button-ghost" type="button" (click)="endpointModalOpen.set(false)">Cancel</button><button class="button button-primary" type="submit" [disabled]="modalSaving()">{{ modalSaving() ? 'Saving…' : 'Save endpoint' }}</button></div>
+  </form>
+</app-modal>
+
+<app-modal [open]="environmentModalOpen()" [title]="editingEnvironment() ? 'Edit environment' : 'Add environment'" eyebrow="Deployment target" (closed)="environmentModalOpen.set(false)">
+  <form class="modal-form" [formGroup]="environmentForm" (ngSubmit)="saveEnvironment()">
+    <div class="form-grid">
+      <label class="field"><span>Environment *</span><select class="select" formControlName="environmentType">@for (type of environmentTypes; track type) { <option [value]="type">{{ type | enumLabel }}</option> }</select></label>
+      <label class="field"><span>Base URL *</span><input class="input" type="url" formControlName="baseUrl" placeholder="https://service-uat.bank.local"></label>
+      <label class="field"><span>Notes</span><textarea class="textarea" rows="3" formControlName="notes"></textarea></label>
+      <label class="switch-field"><input type="checkbox" formControlName="isEnabled"><span class="switch"></span><div><strong>Enable test execution</strong><small>Disabled environments remain visible but cannot be selected.</small></div></label>
+    </div>
+    @if (modalError()) { <div class="inline-alert error">{{ modalError() }}</div> }
+    <div class="modal-actions"><button class="button button-ghost" type="button" (click)="environmentModalOpen.set(false)">Cancel</button><button class="button button-primary" type="submit" [disabled]="modalSaving()">{{ modalSaving() ? 'Saving…' : 'Save environment' }}</button></div>
+  </form>
+</app-modal>
+
+<app-modal [open]="secretModalOpen()" title="Set encrypted environment secret" eyebrow="Sensitive value" (closed)="secretModalOpen.set(false)">
+  <form class="modal-form" [formGroup]="secretForm" (ngSubmit)="saveSecret()">
+    <div class="inline-alert warning"><strong>Secret values are write-only.</strong><span>ApiVault.Api encrypts the value and returns only the secret name. Existing values cannot be viewed in this interface.</span></div>
+    <label class="field"><span>Secret name *</span><input class="input code-input" formControlName="name" placeholder="BEARER_TOKEN"></label>
+    <label class="field"><span>Secret value *</span><textarea class="textarea code-input" rows="4" formControlName="value" autocomplete="off"></textarea></label>
+    @if (modalError()) { <div class="inline-alert error">{{ modalError() }}</div> }
+    <div class="modal-actions"><button class="button button-ghost" type="button" (click)="secretModalOpen.set(false)">Cancel</button><button class="button button-primary" type="submit" [disabled]="modalSaving()">{{ modalSaving() ? 'Encrypting…' : 'Save secret' }}</button></div>
+  </form>
+</app-modal>

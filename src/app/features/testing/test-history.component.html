@@ -1,0 +1,50 @@
+<app-page-header title="API test history" eyebrow="Execution evidence" description="Review retained request and response evidence. Sensitive headers and known secret values are redacted by ApiVault.Api before storage."></app-page-header>
+
+<section class="panel filter-panel history-filter">
+  <label class="field"><span>Endpoint ID</span><input class="input code-input" [(ngModel)]="endpointId" placeholder="Optional GUID"></label>
+  <label class="field"><span>Environment ID</span><input class="input code-input" [(ngModel)]="environmentId" placeholder="Optional GUID"></label>
+  <label class="field"><span>Maximum records</span><select class="select" [(ngModel)]="take"><option [ngValue]="25">25</option><option [ngValue]="50">50</option><option [ngValue]="100">100</option><option [ngValue]="200">200</option></select></label>
+  <div class="filter-actions"><button class="button button-primary" type="button" (click)="load()">Refresh history</button><button class="button button-ghost" type="button" (click)="clearFilters()">Clear</button></div>
+</section>
+
+<section class="panel">
+  <header class="panel-header"><div><h2>Retained executions</h2><p>{{ history().length }} records loaded</p></div><div class="legend"><span><i class="success"></i>Success</span><span><i class="failed"></i>Failed</span></div></header>
+  @if (loading()) { <div class="table-loading">Loading execution history…</div> }
+  @else if (history().length === 0) { <app-empty-state symbol="HS" title="No test history" message="No executions match the selected filters."></app-empty-state> }
+  @else {
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Time</th><th>Result</th><th>Request URL</th><th>Duration</th><th>Size</th><th>Requested by</th><th></th></tr></thead>
+        <tbody>
+          @for (item of history(); track item.id) {
+            <tr>
+              <td><strong class="cell-strong">{{ formatDate(item.startedAtUtc) }}</strong><small>{{ formatTime(item.startedAtUtc) }}</small></td>
+              <td><span class="badge" [class.status-active]="item.isSuccess" [class.status-retired]="!item.isSuccess">{{ item.responseStatusCode || (item.isSuccess ? 'OK' : 'Error') }}</span></td>
+              <td class="url-cell"><code>{{ item.requestUrl }}</code>@if (item.errorMessage) { <small class="error-text">{{ item.errorMessage }}</small> }</td>
+              <td>{{ item.durationMilliseconds }} ms</td>
+              <td><strong class="cell-strong">{{ formatter.byteSize(item.responseSizeBytes) }}</strong><small>req {{ formatter.byteSize(item.requestSizeBytes) }}</small></td>
+              <td>{{ item.requestedBy }}</td>
+              <td><button class="button button-ghost button-small" type="button" (click)="selected.set(item)">Details</button></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+<app-modal [open]="!!selected()" title="Execution evidence" eyebrow="Redacted retained history" [wide]="true" (closed)="selected.set(null)">
+  @if (selected(); as item) {
+    <div class="response-metrics">
+      <div><span>Status</span><strong>{{ item.responseStatusCode || 'No response' }}</strong></div><div><span>Duration</span><strong>{{ item.durationMilliseconds }} ms</strong></div><div><span>Request</span><strong>{{ formatter.byteSize(item.requestSizeBytes) }}</strong></div><div><span>Response</span><strong>{{ formatter.byteSize(item.responseSizeBytes) }}</strong></div>
+    </div>
+    <div class="result-url"><span>Request URL</span><code>{{ item.requestUrl }}</code></div>
+    @if (item.errorMessage) { <div class="inline-alert error">{{ item.errorMessage }}</div> }
+    <div class="history-detail-grid">
+      <div><h3>Request headers</h3><pre class="response-code">{{ formatter.prettyJson(item.requestHeadersJson) || 'No headers.' }}</pre></div>
+      <div><h3>Response headers</h3><pre class="response-code">{{ formatter.prettyJson(item.responseHeadersJson) || 'No headers.' }}</pre></div>
+      <div><h3>Request body</h3><pre class="response-code">{{ formatter.prettyJson(item.requestBody) || item.requestBody || 'No body.' }}</pre></div>
+      <div><h3>Response body</h3><pre class="response-code">{{ formatter.prettyJson(item.responseBody) || item.responseBody || 'No body.' }}</pre></div>
+    </div>
+  }
+</app-modal>

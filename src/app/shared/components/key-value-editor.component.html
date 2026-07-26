@@ -1,0 +1,11 @@
+<div class="kv-editor">
+  @for (row of rows; track $index) {
+    <div class="kv-row">
+      <label class="check compact-check"><input type="checkbox" [(ngModel)]="row.enabled" (ngModelChange)="emitChange()"><span></span></label>
+      <input class="input" [placeholder]="keyPlaceholder" [(ngModel)]="row.key" (ngModelChange)="emitChange()">
+      <input class="input" [placeholder]="valuePlaceholder" [(ngModel)]="row.value" (ngModelChange)="emitChange()">
+      <button class="icon-button danger-ghost" type="button" aria-label="Remove row" (click)="remove($index)">×</button>
+    </div>
+  }
+  <button type="button" class="button button-ghost button-small" (click)="add()">+ Add row</button>
+</div>

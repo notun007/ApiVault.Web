@@ -1,0 +1,33 @@
+<app-page-header title="Audit logs" eyebrow="Governance traceability" description="Review who changed governed records, when the change occurred, the entity affected, source IP, and correlation identifier."></app-page-header>
+
+<section class="panel filter-panel history-filter">
+  <label class="field"><span>Entity type</span><input class="input" [(ngModel)]="entityType" placeholder="e.g. ApiVersion"></label>
+  <label class="field"><span>Entity ID</span><input class="input code-input" [(ngModel)]="entityId" placeholder="Optional identifier"></label>
+  <label class="field"><span>Maximum records</span><select class="select" [(ngModel)]="take"><option [ngValue]="50">50</option><option [ngValue]="100">100</option><option [ngValue]="200">200</option></select></label>
+  <div class="filter-actions"><button class="button button-primary" type="button" (click)="load()">Apply filters</button><button class="button button-ghost" type="button" (click)="clear()">Clear</button></div>
+</section>
+
+<section class="panel">
+  <header class="panel-header"><div><h2>Recorded changes</h2><p>{{ logs().length }} events loaded</p></div></header>
+  @if (loading()) { <div class="table-loading">Loading audit trail…</div> }
+  @else if (logs().length === 0) { <app-empty-state symbol="AU" title="No audit events" message="No changes match the selected filters."></app-empty-state> }
+  @else {
+    <div class="audit-timeline">
+      @for (log of logs(); track log.id) {
+        <article class="audit-event">
+          <span class="audit-dot"></span>
+          <div class="audit-time"><strong>{{ formatDate(log.occurredAtUtc) }}</strong><small>{{ formatTime(log.occurredAtUtc) }}</small></div>
+          <div class="audit-main"><header><span class="badge badge-blue">{{ log.action }}</span><strong>{{ log.entityType }}</strong><code>{{ log.entityId }}</code></header><p>Changed by <strong>{{ log.userName }}</strong>@if (log.ipAddress) { from {{ log.ipAddress }} }</p><small>Correlation: {{ log.correlationId || 'Not recorded' }}</small></div>
+          <button class="button button-ghost button-small" type="button" (click)="selected.set(log)">Inspect</button>
+        </article>
+      }
+    </div>
+  }
+</section>
+
+<app-modal [open]="!!selected()" title="Audit event details" eyebrow="Recorded changes" [wide]="true" (closed)="selected.set(null)">
+  @if (selected(); as log) {
+    <div class="detail-list audit-detail"><div><dt>Action</dt><dd>{{ log.action }}</dd></div><div><dt>User</dt><dd>{{ log.userName }}</dd></div><div><dt>Entity</dt><dd>{{ log.entityType }} / {{ log.entityId }}</dd></div><div><dt>IP address</dt><dd>{{ log.ipAddress || 'Not recorded' }}</dd></div><div><dt>Correlation ID</dt><dd><code>{{ log.correlationId || 'Not recorded' }}</code></dd></div></div>
+    <h3>Redacted changes</h3><pre class="response-code">{{ formatter.prettyJson(log.changesJson) || 'No change payload.' }}</pre>
+  }
+</app-modal>

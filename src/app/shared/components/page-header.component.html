@@ -1,0 +1,8 @@
+<header class="page-header">
+  <div>
+    @if (eyebrow) { <span class="eyebrow">{{ eyebrow }}</span> }
+    <h1>{{ title }}</h1>
+    @if (description) { <p>{{ description }}</p> }
+  </div>
+  <div class="page-actions"><ng-content></ng-content></div>
+</header>

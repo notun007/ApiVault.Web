@@ -1,0 +1,10 @@
+<app-page-header title="Interactive API reference" eyebrow="Scalar / OpenAPI 3.1" description="This documentation is generated from the endpoints, samples, authentication guidance, and environments registered for the exact API release.">
+  <a class="button button-ghost" [routerLink]="['/apis', apiId]">← API record</a>
+  <button class="button button-primary" type="button" [disabled]="!document()" (click)="download()">Download OpenAPI JSON</button>
+</app-page-header>
+
+<div class="inline-alert info"><strong>Catalog-generated reference</strong><span>Use ApiVault’s controlled Test Console for governed executions. Scalar’s interactive client should be enabled only according to your bank’s security policy.</span></div>
+
+@if (loading()) { <div class="detail-loading"><div class="spinner"></div><span>Building Scalar reference…</span></div> }
+@if (error()) { <div class="panel"><div class="inline-alert error"><strong>Reference unavailable</strong><span>{{ error() }}</span></div></div> }
+<section class="scalar-shell" [class.hidden]="loading() || error()"><div #scalarHost class="scalar-host"></div></section>

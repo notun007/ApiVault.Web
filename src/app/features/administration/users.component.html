@@ -1,0 +1,37 @@
+<app-page-header title="Users and access roles" eyebrow="Security administration" description="Create ApiVault accounts and assign least-privilege roles for administration, API ownership, controlled testing, or read-only access.">
+  <button class="button button-primary" type="button" (click)="openCreate()">+ Create user</button>
+</app-page-header>
+
+<section class="role-cards">
+  <article><span class="role-icon">AD</span><div><strong>Admin</strong><p>Full administration, users, reference data, and audit access.</p></div></article>
+  <article><span class="role-icon">AO</span><div><strong>API Owner</strong><p>Manage APIs, releases, endpoints, environments, and projects.</p></div></article>
+  <article><span class="role-icon">TX</span><div><strong>Tester</strong><p>Execute controlled API tests and review history.</p></div></article>
+  <article><span class="role-icon">VW</span><div><strong>Viewer</strong><p>Read catalog, projects, references, and test history.</p></div></article>
+</section>
+
+<section class="panel">
+  <header class="panel-header"><div><h2>ApiVault accounts</h2><p>{{ users().length }} users</p></div></header>
+  @if (loading()) { <div class="table-loading">Loading users…</div> }
+  @else if (users().length === 0) { <app-empty-state symbol="US" title="No users found" message="Create an account with an appropriate role."></app-empty-state> }
+  @else {
+    <div class="table-wrap"><table><thead><tr><th>User</th><th>Username</th><th>Role</th><th>Status</th><th>Last login</th></tr></thead><tbody>
+      @for (user of users(); track user.id) {
+        <tr><td><strong class="cell-strong">{{ user.displayName }}</strong><small>{{ user.email || 'No email' }}</small></td><td><code>{{ user.username }}</code></td><td><span class="badge badge-blue">{{ user.role | enumLabel }}</span></td><td><span class="badge" [class.status-active]="user.isActive" [class.status-retired]="!user.isActive">{{ user.isActive ? 'Active' : 'Inactive' }}</span></td><td>{{ user.lastLoginAtUtc ? formatDate(user.lastLoginAtUtc) : 'Never' }}</td></tr>
+      }
+    </tbody></table></div>
+  }
+</section>
+
+<app-modal [open]="modalOpen()" title="Create ApiVault user" eyebrow="Least-privilege access" (closed)="modalOpen.set(false)">
+  <form class="modal-form" [formGroup]="form" (ngSubmit)="save()">
+    <div class="form-grid two-column">
+      <label class="field"><span>Username *</span><input class="input code-input" formControlName="username" autocomplete="off"></label>
+      <label class="field"><span>Display name *</span><input class="input" formControlName="displayName"></label>
+      <label class="field"><span>Email</span><input class="input" type="email" formControlName="email"></label>
+      <label class="field"><span>Role *</span><select class="select" formControlName="role">@for (role of roles; track role) { <option [value]="role">{{ role | enumLabel }}</option> }</select></label>
+      <label class="field field-span"><span>Initial password *</span><input class="input" type="password" formControlName="password" autocomplete="new-password"><small>Minimum 12 characters. Distribute through an approved secure channel.</small></label>
+    </div>
+    @if (modalError()) { <div class="inline-alert error">{{ modalError() }}</div> }
+    <div class="modal-actions"><button class="button button-ghost" type="button" (click)="modalOpen.set(false)">Cancel</button><button class="button button-primary" type="submit" [disabled]="saving()">{{ saving() ? 'Creating…' : 'Create user' }}</button></div>
+  </form>
+</app-modal>

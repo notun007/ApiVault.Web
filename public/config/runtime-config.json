@@ -1,0 +1,6 @@
+{
+  "apiBaseUrl": "https://localhost:44315",
+  "applicationName": "ApiVault",
+  "organizationName": "Banking Organization",
+  "sessionStorageKey": "apivault.session"
+}

@@ -1,0 +1,75 @@
+<app-page-header title="Controlled API test console" eyebrow="Execution through ApiVault.Api" description="Select a registered release and approved environment. ApiVault enforces timeout, size, SSRF, redirect, and redaction controls server-side."></app-page-header>
+
+<div class="inline-alert warning security-banner">
+  <strong>Security boundary</strong>
+  <span>Do not paste production credentials into request headers or bodies. Use encrypted environment secrets and approved placeholders such as <code>{{ '{{secret:BEARER_TOKEN}}' }}</code>.</span>
+</div>
+
+<section class="test-layout">
+  <article class="panel request-builder">
+    <header class="panel-header"><div><span class="eyebrow">Request definition</span><h2>Build request</h2></div><span class="controlled-chip"><span class="status-dot"></span> Server controlled</span></header>
+
+    <div class="form-grid two-column selection-grid">
+      <label class="field"><span>API *</span><select class="select" [ngModel]="selectedApiId()" (ngModelChange)="selectApi($event)"><option value="">Select API</option>@for (api of apis(); track api.id) { <option [value]="api.id">{{ api.name }} — {{ api.apiProjectName }}</option> }</select></label>
+      <label class="field"><span>Version *</span><select class="select" [ngModel]="selectedVersionId()" (ngModelChange)="selectVersion($event)" [disabled]="!apiDetail()"><option value="">Select release</option>@for (version of versions(); track version.id) { <option [value]="version.id">v{{ version.version }} — {{ version.lifecycleStatus }}</option> }</select></label>
+      <label class="field"><span>Endpoint *</span><select class="select" [ngModel]="selectedEndpointId()" (ngModelChange)="selectEndpoint($event)" [disabled]="!selectedVersion()"><option value="">Select endpoint</option>@for (endpoint of endpoints(); track endpoint.id) { <option [value]="endpoint.id">{{ endpoint.httpMethod }} {{ endpoint.relativePath }}</option> }</select></label>
+      <label class="field"><span>Environment *</span><select class="select" [ngModel]="selectedEnvironmentId()" (ngModelChange)="selectedEnvironmentId.set($event)" [disabled]="!selectedVersion()"><option value="">Select environment</option>@for (environment of environments(); track environment.id) { <option [value]="environment.id" [disabled]="!environment.isEnabled">{{ environment.environmentType | enumLabel }} — {{ environment.baseUrl }}</option> }</select></label>
+    </div>
+
+    @if (selectedEndpoint(); as endpoint) {
+      <div class="request-line"><span class="method" [class]="'method ' + endpoint.httpMethod.toLowerCase()">{{ endpoint.httpMethod }}</span><code>{{ selectedEnvironment()?.baseUrl || '{environment}' }}{{ endpoint.relativePath }}</code></div>
+      @if (endpoint.description) { <p class="request-description">{{ endpoint.description }}</p> }
+    }
+
+    <div class="builder-tabs">
+      @for (tab of tabs; track tab.id) { <button type="button" [class.active]="activeTab() === tab.id" (click)="activeTab.set(tab.id)">{{ tab.label }}@if (tab.count()) { <span>{{ tab.count() }}</span> }</button> }
+    </div>
+
+    <div class="builder-content">
+      @switch (activeTab()) {
+        @case ('path') { <app-key-value-editor [(rows)]="pathRows" keyPlaceholder="Path parameter" valuePlaceholder="Value" /> }
+        @case ('query') { <app-key-value-editor [(rows)]="queryRows" keyPlaceholder="Query parameter" valuePlaceholder="Value" /> }
+        @case ('headers') { <app-key-value-editor [(rows)]="headerRows" keyPlaceholder="Header name" valuePlaceholder="Value or {{ '{{secret:NAME}}' }}" /> }
+        @case ('body') { <textarea class="textarea code-input request-body" rows="16" [(ngModel)]="body" placeholder="Request body"></textarea> }
+        @case ('settings') {
+          <div class="form-grid two-column">
+            <label class="field"><span>Timeout override</span><input class="input" type="number" min="1" max="300" [(ngModel)]="timeoutSeconds" [attr.placeholder]="selectedVersion()?.timeoutSeconds ?? 30"><small>Cannot exceed server and release controls.</small></label>
+            <div class="limit-summary"><div><span>Request ceiling</span><strong>{{ formatter.byteSize(selectedVersion()?.maxRequestBytes || 0) }}</strong></div><div><span>Response ceiling</span><strong>{{ formatter.byteSize(selectedVersion()?.maxResponseBytes || 0) }}</strong></div><div><span>Redirects</span><strong>Disabled</strong></div><div><span>Private hosts</span><strong>Allowlist only</strong></div></div>
+          </div>
+        }
+      }
+    </div>
+
+    @if (executionError()) { <div class="inline-alert error"><strong>Execution failed</strong><span>{{ executionError() }}</span></div> }
+    <footer class="request-actions"><button type="button" class="button button-ghost" (click)="resetRequest()">Reset request</button><button type="button" class="button button-primary execute-button" [disabled]="!canExecute() || executing()" (click)="execute()">{{ executing() ? 'Executing securely…' : 'Execute API test' }}</button></footer>
+  </article>
+
+  <article class="panel response-viewer">
+    <header class="panel-header"><div><span class="eyebrow">Captured evidence</span><h2>Response</h2></div>@if (result(); as response) { <span class="badge" [class.status-active]="response.isSuccess" [class.status-retired]="!response.isSuccess">{{ response.isSuccess ? 'Success' : 'Failed' }}</span> }</header>
+
+    @if (executing()) {
+      <div class="response-placeholder"><div class="spinner"></div><h3>Executing controlled request</h3><p>ApiVault.Api is resolving the approved host, applying authentication, enforcing limits, and capturing evidence.</p></div>
+    } @else if (result(); as response) {
+      <div class="response-metrics">
+        <div><span>Status</span><strong>{{ response.responseStatusCode || 'No response' }}</strong></div>
+        <div><span>Duration</span><strong>{{ response.durationMilliseconds }} ms</strong></div>
+        <div><span>Request size</span><strong>{{ formatter.byteSize(response.requestSizeBytes) }}</strong></div>
+        <div><span>Response size</span><strong>{{ formatter.byteSize(response.responseSizeBytes) }}</strong></div>
+      </div>
+      <div class="result-url"><span>Request URL</span><code>{{ response.requestUrl }}</code></div>
+      @if (response.errorMessage) { <div class="inline-alert error">{{ response.errorMessage }}</div> }
+      <div class="response-tabs">
+        <button type="button" [class.active]="responseTab() === 'body'" (click)="responseTab.set('body')">Body</button>
+        <button type="button" [class.active]="responseTab() === 'headers'" (click)="responseTab.set('headers')">Response headers</button>
+        <button type="button" [class.active]="responseTab() === 'request'" (click)="responseTab.set('request')">Stored request</button>
+      </div>
+      @switch (responseTab()) {
+        @case ('body') { <pre class="response-code">{{ formatter.prettyJson(response.responseBody) || response.responseBody || 'No response body.' }}</pre> }
+        @case ('headers') { <pre class="response-code">{{ formatter.prettyJson(response.responseHeadersJson) || 'No response headers.' }}</pre> }
+        @case ('request') { <div class="stored-request"><h4>Redacted headers</h4><pre class="response-code">{{ formatter.prettyJson(response.requestHeadersJson) || 'No request headers.' }}</pre><h4>Request body</h4><pre class="response-code">{{ formatter.prettyJson(response.requestBody) || response.requestBody || 'No request body.' }}</pre></div> }
+      }
+    } @else {
+      <div class="response-placeholder"><span class="response-symbol">↗</span><h3>No execution yet</h3><p>Choose an API, exact version, endpoint, and enabled environment, then execute the request.</p></div>
+    }
+  </article>
+</section>

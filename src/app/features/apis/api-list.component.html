@@ -1,0 +1,47 @@
+<app-page-header title="API catalog" eyebrow="Inventory and ownership" description="Search internal and third-party APIs, review current releases, and open detailed governance records.">
+  @if (canManage()) { <a class="button button-primary" routerLink="/apis/new">+ Register API</a> }
+</app-page-header>
+
+<section class="panel filter-panel">
+  <form class="filter-grid" [formGroup]="filters" (ngSubmit)="search(1)">
+    <label class="field search-field"><span>Search</span><input class="input" formControlName="search" placeholder="API name, project, or description"></label>
+    <label class="field"><span>Ownership</span><select class="select" formControlName="ownershipType"><option value="">All ownership</option>@for (value of ownershipTypes; track value) { <option [value]="value">{{ value | enumLabel }}</option> }</select></label>
+    <label class="field"><span>Protocol</span><select class="select" formControlName="protocol"><option value="">All protocols</option>@for (value of protocols; track value) { <option [value]="value">{{ value | enumLabel }}</option> }</select></label>
+    <label class="field"><span>Lifecycle</span><select class="select" formControlName="lifecycleStatus"><option value="">All statuses</option>@for (value of lifecycleStatuses; track value) { <option [value]="value">{{ value | enumLabel }}</option> }</select></label>
+    <label class="field"><span>Business</span><select class="select" formControlName="businessAreaId"><option value="">All businesses</option>@for (item of businessAreas(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select></label>
+    <label class="field"><span>Team</span><select class="select" formControlName="developmentTeamId"><option value="">All teams</option>@for (item of teams(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select></label>
+    <div class="filter-actions"><button class="button button-primary" type="submit">Apply filters</button><button class="button button-ghost" type="button" (click)="reset()">Reset</button></div>
+  </form>
+</section>
+
+<section class="panel">
+  <header class="panel-header table-header"><div><h2>Registered APIs</h2><p>{{ result().totalCount }} records found</p></div><label class="page-size">Rows <select class="select compact" [value]="result().pageSize" (change)="changePageSize($event)"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></label></header>
+  @if (loading()) {
+    <div class="table-loading">Loading API catalog…</div>
+  } @else if (result().items.length === 0) {
+    <app-empty-state symbol="AP" title="No matching APIs" message="Change the filters or register a new API asset."></app-empty-state>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>API and project</th><th>Ownership</th><th>Protocol</th><th>Business / team</th><th>Current release</th><th>Versions</th><th></th></tr></thead>
+        <tbody>
+          @for (api of result().items; track api.id) {
+            <tr>
+              <td><a class="table-link" [routerLink]="['/apis', api.id]">{{ api.name }}</a><small>{{ api.apiProjectName }}</small></td>
+              <td><span class="badge" [class.badge-blue]="api.ownershipType === 'ThirdParty'">{{ api.ownershipType | enumLabel }}</span></td>
+              <td>{{ api.protocol | enumLabel }}</td>
+              <td><strong class="cell-strong">{{ api.businessArea }}</strong><small>{{ api.developmentTeam }}</small></td>
+              <td><strong class="cell-strong">{{ api.currentVersion || 'Not released' }}</strong><small><span class="badge mini" [class]="'badge mini ' + statusClass(api.currentLifecycleStatus)">{{ api.currentLifecycleStatus || 'No version' }}</span></small></td>
+              <td>{{ api.versionCount }}</td>
+              <td class="actions-cell"><a class="button button-ghost button-small" [routerLink]="['/apis', api.id]">Open</a></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <footer class="pagination">
+      <span>Page {{ result().page }} of {{ result().totalPages || 1 }}</span>
+      <div><button class="button button-ghost button-small" [disabled]="result().page <= 1" (click)="search(result().page - 1)">Previous</button><button class="button button-ghost button-small" [disabled]="result().page >= result().totalPages" (click)="search(result().page + 1)">Next</button></div>
+    </footer>
+  }
+</section>

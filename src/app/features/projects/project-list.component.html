@@ -1,0 +1,50 @@
+<app-page-header title="Projects and applications" eyebrow="Consumer dependency registry" description="Register CBS modules, HRM, internet banking, digital banking, TeleCash, and other applications that consume exact API releases.">
+  @if (canManage()) { <button class="button button-primary" type="button" (click)="openCreate()">+ Register project</button> }
+</app-page-header>
+
+<section class="project-summary-grid">
+  <article><span>Total projects</span><strong>{{ projects().length }}</strong></article>
+  <article><span>Critical applications</span><strong>{{ criticalCount() }}</strong></article>
+  <article><span>Active projects</span><strong>{{ activeCount() }}</strong></article>
+  <article><span>API version links</span><strong>{{ linkCount() }}</strong></article>
+</section>
+
+<section class="panel filter-panel compact-filter">
+  <label class="field"><span>Find project</span><input class="input" [value]="searchText()" (input)="searchText.set($any($event.target).value)" placeholder="Search code, name, business, or team"></label>
+  <label class="field"><span>Status</span><select class="select" [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)"><option value="">All statuses</option>@for (status of statuses; track status) { <option [value]="status">{{ status | enumLabel }}</option> }</select></label>
+  <label class="field"><span>Criticality</span><select class="select" [value]="criticalityFilter()" (change)="criticalityFilter.set($any($event.target).value)"><option value="">All levels</option>@for (level of criticalities; track level) { <option [value]="level">{{ level | enumLabel }}</option> }</select></label>
+</section>
+
+<section class="panel">
+  <header class="panel-header"><div><h2>Registered projects</h2><p>{{ filteredProjects().length }} visible records</p></div></header>
+  @if (loading()) { <div class="table-loading">Loading projects…</div> }
+  @else if (filteredProjects().length === 0) { <app-empty-state symbol="PR" title="No projects found" message="Register a consuming application or change the filters."></app-empty-state> }
+  @else {
+    <div class="project-card-grid">
+      @for (project of filteredProjects(); track project.id) {
+        <a class="project-card" [routerLink]="['/projects', project.id]">
+          <header><span class="project-code">{{ project.code }}</span><span class="badge" [class]="'badge criticality-' + project.criticality.toLowerCase()">{{ project.criticality }}</span></header>
+          <h3>{{ project.name }}</h3>
+          <div class="project-context"><span>{{ project.businessArea }}</span><span>{{ project.ownerTeam }}</span></div>
+          <footer><span class="badge mini" [class]="'badge mini status-' + project.status.toLowerCase()">{{ project.status }}</span><strong>{{ project.linkedApiVersionCount }} API versions →</strong></footer>
+        </a>
+      }
+    </div>
+  }
+</section>
+
+<app-modal [open]="modalOpen()" title="Register project" eyebrow="Consumer application" (closed)="modalOpen.set(false)">
+  <form class="modal-form" [formGroup]="form" (ngSubmit)="save()">
+    <div class="form-grid two-column">
+      <label class="field"><span>Project code *</span><input class="input code-input" formControlName="code" placeholder="IBANK"></label>
+      <label class="field"><span>Project name *</span><input class="input" formControlName="name" placeholder="Internet Banking"></label>
+      <label class="field"><span>Criticality</span><select class="select" formControlName="criticality">@for (level of criticalities; track level) { <option [value]="level">{{ level }}</option> }</select></label>
+      <label class="field"><span>Status</span><select class="select" formControlName="status">@for (status of statuses; track status) { <option [value]="status">{{ status }}</option> }</select></label>
+      <label class="field"><span>Business area *</span><select class="select" formControlName="businessAreaId"><option value="">Select business</option>@for (item of businessAreas(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select></label>
+      <label class="field"><span>Owner team *</span><select class="select" formControlName="ownerTeamId"><option value="">Select team</option>@for (item of teams(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select></label>
+      <label class="field field-span"><span>Description</span><textarea class="textarea" rows="4" formControlName="description" placeholder="Purpose, users, channels, and business scope"></textarea></label>
+    </div>
+    @if (modalError()) { <div class="inline-alert error">{{ modalError() }}</div> }
+    <div class="modal-actions"><button class="button button-ghost" type="button" (click)="modalOpen.set(false)">Cancel</button><button class="button button-primary" type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Register project' }}</button></div>
+  </form>
+</app-modal>

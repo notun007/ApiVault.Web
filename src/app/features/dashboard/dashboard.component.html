@@ -1,0 +1,66 @@
+<app-page-header title="Portfolio dashboard" eyebrow="ApiVault overview" description="A current view of API assets, consuming projects, lifecycle exposure, and controlled test activity.">
+  @if (canManage()) { <a class="button button-primary" routerLink="/apis/new">+ Register API</a> }
+</app-page-header>
+
+@if (loading()) {
+  <div class="stat-grid">@for (item of [1,2,3,4]; track item) { <div class="stat-card skeleton-card"></div> }</div>
+} @else {
+  <section class="stat-grid">
+    <article class="stat-card"><span class="stat-label">Registered APIs</span><strong>{{ apis().length }}</strong><small>{{ internalApiCount() }} internal · {{ thirdPartyApiCount() }} third-party</small></article>
+    <article class="stat-card"><span class="stat-label">Active releases</span><strong>{{ activeCount() }}</strong><small>{{ deprecatedCount() }} deprecated · {{ retiredCount() }} retired</small></article>
+    <article class="stat-card"><span class="stat-label">Registered projects</span><strong>{{ projects().length }}</strong><small>{{ criticalProjects() }} critical business applications</small></article>
+    <article class="stat-card"><span class="stat-label">Recent executions</span><strong>{{ tests().length }}</strong><small>{{ successfulTests() }} successful in retained sample</small></article>
+  </section>
+}
+
+<section class="dashboard-grid">
+  <article class="panel panel-large">
+    <header class="panel-header"><div><span class="eyebrow">Lifecycle watch</span><h2>API release posture</h2></div><a routerLink="/apis">View catalog →</a></header>
+    @if (apis().length === 0 && !loading()) {
+      <app-empty-state symbol="AP" title="No APIs registered" message="Register the first internal or third-party API to begin governance."></app-empty-state>
+    } @else {
+      <div class="lifecycle-bars">
+        @for (row of lifecycleRows(); track row.label) {
+          <div class="lifecycle-row"><span>{{ row.label }}</span><div class="bar-track"><div class="bar-fill" [style.width.%]="row.percent" [class]="'bar-fill ' + row.className"></div></div><strong>{{ row.count }}</strong></div>
+        }
+      </div>
+      <div class="table-wrap compact-table">
+        <table>
+          <thead><tr><th>API</th><th>Business</th><th>Current release</th><th>Status</th></tr></thead>
+          <tbody>
+            @for (api of apis().slice(0, 6); track api.id) {
+              <tr><td><a class="table-link" [routerLink]="['/apis', api.id]">{{ api.name }}</a><small>{{ api.apiProjectName }}</small></td><td>{{ api.businessArea }}</td><td>{{ api.currentVersion || 'Not released' }}</td><td><span class="badge" [class]="'badge ' + statusClass(api.currentLifecycleStatus)">{{ api.currentLifecycleStatus || 'No version' }}</span></td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </article>
+
+  <article class="panel">
+    <header class="panel-header"><div><span class="eyebrow">Controlled tests</span><h2>Latest executions</h2></div><a routerLink="/test-history">History →</a></header>
+    @if (tests().length === 0 && !loading()) {
+      <app-empty-state symbol="TX" title="No test evidence" message="Execute an approved API endpoint to build history."></app-empty-state>
+    } @else {
+      <div class="activity-list">
+        @for (test of tests().slice(0, 7); track test.id) {
+          <div class="activity-item">
+            <span class="activity-status" [class.success]="test.isSuccess" [class.failed]="!test.isSuccess"></span>
+            <div><strong>{{ test.responseStatusCode || (test.isSuccess ? 'Completed' : 'Failed') }}</strong><span>{{ test.requestUrl }}</span><small>{{ test.requestedBy }} · {{ test.durationMilliseconds }} ms</small></div>
+          </div>
+        }
+      </div>
+    }
+  </article>
+
+  <article class="panel">
+    <header class="panel-header"><div><span class="eyebrow">Dependencies</span><h2>Most connected projects</h2></div><a routerLink="/projects">Projects →</a></header>
+    <div class="rank-list">
+      @for (project of topProjects(); track project.id; let index = $index) {
+        <a [routerLink]="['/projects', project.id]" class="rank-item"><span class="rank-number">{{ index + 1 }}</span><div><strong>{{ project.name }}</strong><small>{{ project.code }} · {{ project.businessArea }}</small></div><span class="count-pill">{{ project.linkedApiVersionCount }}</span></a>
+      } @empty {
+        <app-empty-state symbol="PR" title="No project links" message="Register consuming applications and link exact API versions."></app-empty-state>
+      }
+    </div>
+  </article>
+</section>

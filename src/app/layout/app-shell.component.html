@@ -1,0 +1,51 @@
+<div class="app-frame" [class.sidebar-open]="mobileSidebarOpen()">
+  <aside class="sidebar">
+    <a class="brand" routerLink="/dashboard" (click)="closeMobileSidebar()">
+      <span class="brand-mark">AV</span>
+      <span><strong>{{ runtime.config().applicationName }}</strong><small>API Governance</small></span>
+    </a>
+
+    <div class="sidebar-context">
+      <span class="context-label">Workspace</span>
+      <strong>{{ runtime.config().organizationName }}</strong>
+    </div>
+
+    <nav class="main-nav" aria-label="Primary navigation">
+      @for (item of visibleNav(); track item.path) {
+        <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' }" (click)="closeMobileSidebar()">
+          <span class="nav-icon">{{ item.icon }}</span>
+          <span><strong>{{ item.label }}</strong><small>{{ item.caption }}</small></span>
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="security-chip"><span class="status-dot"></span> Controlled access</div>
+      <p>Requests are executed through ApiVault.Api security policies.</p>
+    </div>
+  </aside>
+
+  @if (mobileSidebarOpen()) { <button class="sidebar-scrim" aria-label="Close navigation" (click)="closeMobileSidebar()"></button> }
+
+  <div class="workspace">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button type="button" class="mobile-menu" aria-label="Open navigation" (click)="mobileSidebarOpen.set(true)">☰</button>
+        <div>
+          <span class="topbar-kicker">Enterprise API repository</span>
+          <strong>Inventory · Governance · Testing</strong>
+        </div>
+      </div>
+      <div class="user-menu">
+        <div class="avatar">{{ initials() }}</div>
+        <div class="user-copy">
+          <strong>{{ auth.displayName() }}</strong>
+          <span>{{ auth.role() | enumLabel }}</span>
+        </div>
+        <button type="button" class="button button-ghost button-small" (click)="logout()">Sign out</button>
+      </div>
+    </header>
+
+    <main class="content"><router-outlet /></main>
+  </div>
+</div>

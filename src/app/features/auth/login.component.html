@@ -1,0 +1,46 @@
+<main class="login-page">
+  <section class="login-visual">
+    <div class="login-brand"><span class="brand-mark large">AV</span><span><strong>{{ runtime.config().applicationName }}</strong><small>Enterprise API governance</small></span></div>
+    <div class="login-message">
+      <span class="eyebrow light">Secure integration portfolio</span>
+      <h1>Know every API.<br>Trace every dependency.</h1>
+      <p>Register internal and third-party services, govern exact releases, control environment access, and retain test evidence in one bank-managed workspace.</p>
+    </div>
+    <div class="login-proof-grid">
+      <article><strong>Lifecycle</strong><span>Draft to retirement</span></article>
+      <article><strong>Traceability</strong><span>Project-to-version links</span></article>
+      <article><strong>Protection</strong><span>SSRF and secret redaction</span></article>
+    </div>
+  </section>
+
+  <section class="login-form-panel">
+    <form class="login-card" [formGroup]="form" (ngSubmit)="submit()">
+      <span class="eyebrow">Authorized access</span>
+      <h2>Sign in to ApiVault</h2>
+      <p>Use the account assigned by your ApiVault administrator.</p>
+
+      <label class="field">
+        <span>Username</span>
+        <input class="input" formControlName="username" autocomplete="username" autofocus>
+        @if (form.controls.username.touched && form.controls.username.invalid) { <small class="field-error">Username is required.</small> }
+      </label>
+
+      <label class="field">
+        <span>Password</span>
+        <div class="password-wrap">
+          <input class="input" [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="current-password">
+          <button type="button" class="password-toggle" (click)="showPassword.update((value) => !value)">{{ showPassword() ? 'Hide' : 'Show' }}</button>
+        </div>
+        @if (form.controls.password.touched && form.controls.password.invalid) { <small class="field-error">Password is required.</small> }
+      </label>
+
+      @if (errorMessage()) { <div class="inline-alert error"><strong>Sign-in failed</strong><span>{{ errorMessage() }}</span></div> }
+
+      <button class="button button-primary button-full" type="submit" [disabled]="submitting()">
+        {{ submitting() ? 'Signing in…' : 'Sign in securely' }}
+      </button>
+
+      <div class="login-note"><span class="status-dot"></span><span>Authentication is issued by ApiVault.Api using signed JWT access tokens.</span></div>
+    </form>
+  </section>
+</main>

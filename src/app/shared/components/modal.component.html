@@ -1,0 +1,14 @@
+@if (open) {
+  <div class="modal-backdrop" (mousedown)="onBackdrop($event)">
+    <section class="modal-panel" [class.modal-wide]="wide" role="dialog" aria-modal="true" [attr.aria-label]="title">
+      <header class="modal-header">
+        <div>
+          @if (eyebrow) { <span class="eyebrow">{{ eyebrow }}</span> }
+          <h2>{{ title }}</h2>
+        </div>
+        <button type="button" class="icon-button" aria-label="Close" (click)="closed.emit()">×</button>
+      </header>
+      <div class="modal-body"><ng-content></ng-content></div>
+    </section>
+  </div>
+}
