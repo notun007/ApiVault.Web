@@ -67,6 +67,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/administration/reference-data.component').then((m) => m.ReferenceDataComponent)
       },
       {
+        path: 'admin/api-projects',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.Admin, UserRole.ApiOwner] },
+        loadComponent: () => import('./features/administration/api-projects.component').then((m) => m.ApiProjectsComponent)
+      },
+      {
         path: 'admin/users',
         canActivate: [roleGuard],
         data: { roles: [UserRole.Admin] },

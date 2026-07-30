@@ -1,7 +1,7 @@
 @if (loading()) {
   <div class="detail-loading"><div class="spinner"></div><span>Loading API governance record…</span></div>
 } @else if (api(); as item) {
-  <app-page-header [title]="item.name" [eyebrow]="item.apiProjectName" [description]="item.description || 'No description has been provided for this API.'">
+  <app-page-header [title]="item.name" [eyebrow]="item.apiProject.name" [description]="item.description || 'No description has been provided for this API.'">
     <a class="button button-ghost" routerLink="/apis">← Catalog</a>
     @if (canManage()) { <a class="button button-ghost" [routerLink]="['/apis', item.id, 'edit']">Edit API</a><button class="button button-primary" type="button" (click)="openCreateVersion()">+ Add release</button> }
   </app-page-header>

@@ -4,9 +4,10 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { readProblem } from '../../core/http/error.interceptor';
-import { ApiOwnershipType, ApiProtocol, CreateApiRequest, LookupResponse } from '../../core/models/api.models';
+import { ApiOwnershipType, ApiProtocol, ApiProjectResponse, CreateApiRequest, LookupResponse } from '../../core/models/api.models';
 import { AdminClient } from '../../core/services/admin.client';
 import { ApiCatalogClient } from '../../core/services/api-catalog.client';
+import { ApiProjectClient } from '../../core/services/api-project.client';
 import { ToastService } from '../../core/services/toast.service';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { EnumLabelPipe } from '../../shared/pipes/enum-label.pipe';
@@ -24,6 +25,7 @@ export class ApiFormComponent {
   private readonly router = inject(Router);
   private readonly apiClient = inject(ApiCatalogClient);
   private readonly adminClient = inject(AdminClient);
+  private readonly apiProjectClient = inject(ApiProjectClient);
   private readonly toast = inject(ToastService);
 
   readonly apiId = this.route.snapshot.paramMap.get('id') ?? '';
@@ -32,12 +34,13 @@ export class ApiFormComponent {
   readonly errorMessage = signal('');
   readonly businessAreas = signal<LookupResponse[]>([]);
   readonly teams = signal<LookupResponse[]>([]);
+  readonly apiProjects = signal<ApiProjectResponse[]>([]);
   readonly ownershipTypes = Object.values(ApiOwnershipType);
   readonly protocols = Object.values(ApiProtocol);
 
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(200)]],
-    apiProjectName: ['', [Validators.required, Validators.maxLength(200)]],
+    apiProjectId: ['', Validators.required],
     description: ['', Validators.maxLength(4000)],
     ownershipType: [ApiOwnershipType.Internal, Validators.required],
     protocol: [ApiProtocol.Rest, Validators.required],
@@ -53,24 +56,34 @@ export class ApiFormComponent {
     forkJoin({
       businessAreas: this.adminClient.getBusinessAreas(),
       teams: this.adminClient.getDevelopmentTeams(),
+      apiProjects: this.apiProjectClient.getActive(),
       api: this.apiId ? this.apiClient.get(this.apiId) : of(null)
-    }).subscribe(({ businessAreas, teams, api }) => {
-      this.businessAreas.set(businessAreas);
-      this.teams.set(teams);
-      if (api) {
-        this.form.patchValue({
-          name: api.name,
-          apiProjectName: api.apiProjectName,
-          description: api.description ?? '',
-          ownershipType: api.ownershipType,
-          protocol: api.protocol,
-          creatorName: api.creatorName,
-          creatorEmail: api.creatorEmail ?? '',
-          vendorName: api.vendorName ?? '',
-          externalReferenceUrl: api.externalReferenceUrl ?? '',
-          businessAreaId: api.businessArea.id,
-          developmentTeamId: api.developmentTeam.id
-        });
+    }).subscribe({
+      next: ({ businessAreas, teams, apiProjects, api }) => {
+        this.businessAreas.set(businessAreas);
+        this.teams.set(teams);
+        this.apiProjects.set(apiProjects);
+        if (api) {
+          this.form.patchValue({
+            name: api.name,
+            apiProjectId: api.apiProjectId,
+            description: api.description ?? '',
+            ownershipType: api.ownershipType,
+            protocol: api.protocol,
+            creatorName: api.creatorName,
+            creatorEmail: api.creatorEmail ?? '',
+            vendorName: api.vendorName ?? '',
+            externalReferenceUrl: api.externalReferenceUrl ?? '',
+            businessAreaId: api.businessArea.id,
+            developmentTeamId: api.developmentTeam.id
+          });
+        }
+      },
+      error: (error: HttpErrorResponse) => {
+        this.errorMessage.set(readProblem(
+          error,
+          'Could not load API registration data. Check that ApiVault.Api is running and reachable.'
+        ));
       }
     });
   }

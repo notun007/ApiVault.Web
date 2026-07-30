@@ -40,6 +40,19 @@ export interface LookupResponse {
   name: string;
 }
 
+export interface ApiProjectResponse extends LookupResponse {
+  description?: string | null;
+  isActive: boolean;
+  apiCount: number;
+}
+
+export interface CreateApiProjectRequest {
+  code: string;
+  name: string;
+  description?: string | null;
+  isActive: boolean;
+}
+
 export interface PagedResult<T> {
   items: T[];
   page: number;
@@ -55,13 +68,14 @@ export interface ApiSearchQuery {
   lifecycleStatus?: ApiLifecycleStatus | '';
   businessAreaId?: string;
   developmentTeamId?: string;
+  apiProjectId?: string;
   page?: number;
   pageSize?: number;
 }
 
 export interface CreateApiRequest {
   name: string;
-  apiProjectName: string;
+  apiProjectId: string;
   description?: string | null;
   ownershipType: ApiOwnershipType;
   protocol: ApiProtocol;
@@ -76,7 +90,8 @@ export interface CreateApiRequest {
 export interface ApiSummaryResponse {
   id: string;
   name: string;
-  apiProjectName: string;
+  apiProjectId: string;
+  apiProject: LookupResponse;
   ownershipType: ApiOwnershipType;
   protocol: ApiProtocol;
   businessArea: string;
@@ -89,7 +104,8 @@ export interface ApiSummaryResponse {
 export interface ApiDetailResponse {
   id: string;
   name: string;
-  apiProjectName: string;
+  apiProjectId: string;
+  apiProject: LookupResponse;
   description?: string | null;
   ownershipType: ApiOwnershipType;
   protocol: ApiProtocol;

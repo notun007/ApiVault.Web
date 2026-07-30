@@ -33,6 +33,7 @@ export class AppShellComponent {
     { label: 'Test Console', caption: 'Controlled execution', path: '/testing', icon: 'TX', roles: [UserRole.Admin, UserRole.ApiOwner, UserRole.Tester] },
     { label: 'Test History', caption: 'Evidence and results', path: '/test-history', icon: 'HS' },
     { label: 'Reference Data', caption: 'Businesses and teams', path: '/admin/reference-data', icon: 'RF', roles: [UserRole.Admin] },
+    { label: 'API Projects', caption: 'API ownership registry', path: '/admin/api-projects', icon: 'PJ', roles: [UserRole.Admin, UserRole.ApiOwner] },
     { label: 'Users', caption: 'Roles and access', path: '/admin/users', icon: 'US', roles: [UserRole.Admin] },
     { label: 'Audit Logs', caption: 'Change traceability', path: '/admin/audit', icon: 'AU', roles: [UserRole.Admin] }
   ];

@@ -6,6 +6,7 @@ import {
   ApiLifecycleStatus,
   ApiOwnershipType,
   ApiProtocol,
+  ApiProjectResponse,
   ApiSearchQuery,
   ApiSummaryResponse,
   LookupResponse,
@@ -14,6 +15,7 @@ import {
 import { UserRole } from '../../core/models/security.models';
 import { AdminClient } from '../../core/services/admin.client';
 import { ApiCatalogClient } from '../../core/services/api-catalog.client';
+import { ApiProjectClient } from '../../core/services/api-project.client';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { EnumLabelPipe } from '../../shared/pipes/enum-label.pipe';
@@ -28,6 +30,7 @@ import { EnumLabelPipe } from '../../shared/pipes/enum-label.pipe';
 export class ApiListComponent {
   private readonly fb = inject(FormBuilder);
   private readonly apiClient = inject(ApiCatalogClient);
+  private readonly apiProjectClient = inject(ApiProjectClient);
   private readonly adminClient = inject(AdminClient);
   private readonly auth = inject(AuthService);
 
@@ -36,6 +39,7 @@ export class ApiListComponent {
   readonly lifecycleStatuses = Object.values(ApiLifecycleStatus);
   readonly businessAreas = signal<LookupResponse[]>([]);
   readonly teams = signal<LookupResponse[]>([]);
+  readonly apiProjects = signal<ApiProjectResponse[]>([]);
   readonly loading = signal(true);
   readonly result = signal<PagedResult<ApiSummaryResponse>>({ items: [], page: 1, pageSize: 25, totalCount: 0, totalPages: 0 });
   readonly canManage = () => this.auth.hasAnyRole(UserRole.Admin, UserRole.ApiOwner);
@@ -46,12 +50,14 @@ export class ApiListComponent {
     protocol: '',
     lifecycleStatus: '',
     businessAreaId: '',
-    developmentTeamId: ''
+    developmentTeamId: '',
+    apiProjectId: ''
   });
 
   constructor() {
     this.adminClient.getBusinessAreas().subscribe((items) => this.businessAreas.set(items));
     this.adminClient.getDevelopmentTeams().subscribe((items) => this.teams.set(items));
+    this.apiProjectClient.getActive().subscribe((items) => this.apiProjects.set(items));
     this.search(1);
   }
 
@@ -65,6 +71,7 @@ export class ApiListComponent {
       lifecycleStatus: filters.lifecycleStatus as ApiLifecycleStatus | '',
       businessAreaId: filters.businessAreaId,
       developmentTeamId: filters.developmentTeamId,
+      apiProjectId: filters.apiProjectId,
       page,
       pageSize: this.result().pageSize
     };

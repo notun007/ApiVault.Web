@@ -33,7 +33,7 @@
 
 <app-modal [open]="modalOpen()" title="Link exact API version" eyebrow="Project dependency" (closed)="modalOpen.set(false)">
   <form class="modal-form" [formGroup]="form" (ngSubmit)="saveLink()">
-    <label class="field"><span>API *</span><select class="select" formControlName="apiId" (change)="loadApiVersions()"><option value="">Select registered API</option>@for (api of apis(); track api.id) { <option [value]="api.id">{{ api.name }} — {{ api.apiProjectName }}</option> }</select></label>
+    <label class="field"><span>API *</span><select class="select" formControlName="apiId" (change)="loadApiVersions()"><option value="">Select registered API</option>@for (api of apis(); track api.id) { <option [value]="api.id">{{ api.name }} — {{ api.apiProject.name }}</option> }</select></label>
     <label class="field"><span>Exact release *</span><select class="select" formControlName="apiVersionId"><option value="">Select version</option>@for (version of availableVersions(); track version.id) { <option [value]="version.id">v{{ version.version }} — {{ version.releaseName || 'Unnamed' }} ({{ version.lifecycleStatus }})</option> }</select></label>
     <label class="field"><span>Purpose</span><textarea class="textarea" rows="4" formControlName="purpose" placeholder="How this project uses the API"></textarea></label>
     <label class="switch-field"><input type="checkbox" formControlName="isRequired"><span class="switch"></span><div><strong>Required dependency</strong><small>The project cannot operate correctly without this API release.</small></div></label>

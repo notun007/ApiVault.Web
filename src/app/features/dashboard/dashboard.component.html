@@ -29,7 +29,7 @@
           <thead><tr><th>API</th><th>Business</th><th>Current release</th><th>Status</th></tr></thead>
           <tbody>
             @for (api of apis().slice(0, 6); track api.id) {
-              <tr><td><a class="table-link" [routerLink]="['/apis', api.id]">{{ api.name }}</a><small>{{ api.apiProjectName }}</small></td><td>{{ api.businessArea }}</td><td>{{ api.currentVersion || 'Not released' }}</td><td><span class="badge" [class]="'badge ' + statusClass(api.currentLifecycleStatus)">{{ api.currentLifecycleStatus || 'No version' }}</span></td></tr>
+              <tr><td><a class="table-link" [routerLink]="['/apis', api.id]">{{ api.name }}</a><small>{{ api.apiProject.name }}</small></td><td>{{ api.businessArea }}</td><td>{{ api.currentVersion || 'Not released' }}</td><td><span class="badge" [class]="'badge ' + statusClass(api.currentLifecycleStatus)">{{ api.currentLifecycleStatus || 'No version' }}</span></td></tr>
             }
           </tbody>
         </table>
