@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { RuntimeConfigService } from '../config/runtime-config.service';
 import { LookupResponse } from '../models/api.models';
-import { CreateLookupRequest, CreateUserRequest, UserResponse } from '../models/security.models';
+import { CreateLookupRequest, CreateUserRequest, UpdateUserRolesRequest, UserAccessResponse, UserResponse } from '../models/security.models';
 import { AuditLogResponse } from '../models/test.models';
 
 @Injectable({ providedIn: 'root' })
@@ -32,6 +32,14 @@ export class AdminClient {
 
   createUser(request: CreateUserRequest) {
     return this.http.post<UserResponse>(this.runtime.apiUrl('/api/users'), request);
+  }
+
+  getUserAccess() {
+    return this.http.get<UserAccessResponse[]>(this.runtime.apiUrl('/api/users/access'));
+  }
+
+  updateUserRoles(userId: string, request: UpdateUserRolesRequest) {
+    return this.http.put<void>(this.runtime.apiUrl(`/api/users/${userId}/roles`), request);
   }
 
   getAuditLogs(entityType?: string, entityId?: string, take = 100) {

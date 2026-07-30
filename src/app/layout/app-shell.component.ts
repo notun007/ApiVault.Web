@@ -35,6 +35,9 @@ export class AppShellComponent {
     { label: 'Reference Data', caption: 'Businesses and teams', path: '/admin/reference-data', icon: 'RF', roles: [UserRole.Admin] },
     { label: 'API Projects', caption: 'API ownership registry', path: '/admin/api-projects', icon: 'PJ', roles: [UserRole.Admin, UserRole.ApiOwner] },
     { label: 'Users', caption: 'Roles and access', path: '/admin/users', icon: 'US', roles: [UserRole.Admin] },
+    { label: 'User Access', caption: 'Assign user roles', path: '/admin/security/user-access', icon: 'UA', roles: [UserRole.Admin] },
+    { label: 'Roles', caption: 'Security permissions', path: '/admin/security/roles', icon: 'RL', roles: [UserRole.Admin] },
+    { label: 'Permissions', caption: 'Screen access rules', path: '/admin/security/permissions', icon: 'PM', roles: [UserRole.Admin] },
     { label: 'Audit Logs', caption: 'Change traceability', path: '/admin/audit', icon: 'AU', roles: [UserRole.Admin] }
   ];
 

@@ -1,0 +1,47 @@
+<app-page-header title="Roles" eyebrow="Security administration" description="Create and maintain application roles before assigning screen and action permissions.">
+  <button class="button button-primary" type="button" (click)="openCreate()">+ Create role</button>
+</app-page-header>
+
+<section class="panel security-intro">
+  <span class="eyebrow">Access model</span>
+  <h2>Roles define responsibility</h2>
+  <p>Keep roles business-focused. Screen visibility and actions are assigned separately from user accounts.</p>
+</section>
+
+<section class="panel">
+  <header class="panel-header"><div><h2>Application roles</h2><p>{{ roles().length }} roles</p></div></header>
+  @if (loading()) {
+    <div class="table-loading">Loading roles…</div>
+  } @else if (roles().length === 0) {
+    <app-empty-state symbol="RL" title="No roles found" message="Create the first security role to begin access administration."></app-empty-state>
+  } @else {
+    <div class="table-wrap"><table>
+      <thead><tr><th>Role</th><th>Code</th><th>Description</th><th>Users</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        @for (role of roles(); track role.id) {
+          <tr>
+            <td><strong class="cell-strong">{{ role.name }}</strong>@if (role.isSystemRole) { <small>System role</small> }</td>
+            <td><code>{{ role.code }}</code></td>
+            <td>{{ role.description || '—' }}</td>
+            <td>{{ role.userCount }}</td>
+            <td><span class="badge" [class.badge-green]="role.isActive" [class.badge-gray]="!role.isActive">{{ role.isActive ? 'Active' : 'Inactive' }}</span></td>
+            <td class="actions-cell"><button class="button button-ghost button-small" type="button" (click)="openEdit(role)">Edit</button></td>
+          </tr>
+        }
+      </tbody>
+    </table></div>
+  }
+</section>
+
+<app-modal [open]="modalOpen()" [title]="editing() ? 'Edit role' : 'Create role'" eyebrow="Security administration" (closed)="modalOpen.set(false)">
+  <form class="modal-form" [formGroup]="form" (ngSubmit)="save()">
+    <div class="form-grid two-column">
+      <label class="field"><span>Code *</span><input class="input code-input" formControlName="code" placeholder="e.g. SECURITY_ADMIN"></label>
+      <label class="field"><span>Name *</span><input class="input" formControlName="name" placeholder="Security administrator"></label>
+      <label class="field field-span"><span>Description</span><textarea class="textarea" rows="4" formControlName="description" placeholder="Role responsibility and scope"></textarea></label>
+      @if (editing()) { <label class="switch-field field-span"><input type="checkbox" formControlName="isActive"><span class="switch"></span><div><strong>Active role</strong><small>Inactive roles cannot be assigned to users.</small></div></label> }
+    </div>
+    @if (errorMessage()) { <div class="inline-alert error">{{ errorMessage() }}</div> }
+    <div class="modal-actions"><button class="button button-ghost" type="button" (click)="modalOpen.set(false)">Cancel</button><button class="button button-primary" type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : (editing() ? 'Save changes' : 'Create role') }}</button></div>
+  </form>
+</app-modal>

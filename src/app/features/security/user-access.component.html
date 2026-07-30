@@ -1,0 +1,31 @@
+<app-page-header title="User access" eyebrow="Security administration" description="Assign one or more security roles to each user. Account creation and authorization management remain separate.">
+  <button class="button button-primary" type="button" [disabled]="!selectedUserId() || !selectedRoleIds().length || saving()" (click)="save()">{{ saving() ? 'Saving…' : 'Save roles' }}</button>
+</app-page-header>
+
+@if (errorMessage()) { <div class="inline-alert error">{{ errorMessage() }}</div> }
+
+@if (loading()) {
+  <section class="panel"><div class="table-loading">Loading user access…</div></section>
+} @else if (!users().length || !roles().length) {
+  <section class="panel"><app-empty-state symbol="UA" title="No access data found" message="Create users and security roles before assigning access."></app-empty-state></section>
+} @else {
+  <section class="panel access-selector">
+    <label class="field"><span>User</span><select class="select" [value]="selectedUserId()" (change)="selectUser($any($event.target).value)">
+      @for (user of users(); track user.userId) { <option [value]="user.userId">{{ user.displayName }} ({{ user.username }})</option> }
+    </select></label>
+    <p>Selected roles: {{ selectedRoleIds().length }}</p>
+  </section>
+
+  <section class="panel">
+    <header class="panel-header"><div><h2>Available security roles</h2><p>Choose the roles this user should inherit.</p></div></header>
+    <div class="role-list">
+      @for (role of roles(); track role.id) {
+        <label class="role-option" [class.selected]="isSelected(role.id)">
+          <input type="checkbox" [checked]="isSelected(role.id)" (change)="toggleRole(role.id)">
+          <span><strong>{{ role.name }}</strong><small>{{ role.code }} · {{ role.description || 'No description' }}</small></span>
+          @if (role.isSystemRole) { <em>System role</em> }
+        </label>
+      }
+    </div>
+  </section>
+}

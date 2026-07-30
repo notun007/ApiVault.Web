@@ -41,6 +41,69 @@ export interface UserResponse {
   lastLoginAtUtc?: string | null;
 }
 
+export interface UserAccessResponse {
+  userId: string;
+  username: string;
+  displayName: string;
+  isActive: boolean;
+  roles: UserRoleAssignmentResponse[];
+}
+
+export interface UserRoleAssignmentResponse {
+  roleId: string;
+  code: string;
+  name: string;
+  isActive: boolean;
+}
+
+export interface UpdateUserRolesRequest {
+  roleIds: string[];
+}
+
+export interface RoleResponse {
+  id: string;
+  code: string;
+  name: string;
+  description?: string | null;
+  isSystemRole: boolean;
+  isActive: boolean;
+  userCount: number;
+}
+
+export interface CreateRoleRequest {
+  code: string;
+  name: string;
+  description?: string | null;
+  isActive: boolean;
+}
+
+export interface PermissionResponse {
+  id: string;
+  code: string;
+  name: string;
+  description?: string | null;
+}
+
+export interface SecurityScreenResponse {
+  id: string;
+  code: string;
+  name: string;
+  route: string;
+  icon?: string | null;
+  parentId?: string | null;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export interface RolePermissionResponse {
+  screenId: string;
+  permissionIds: string[];
+}
+
+export interface UpdateRolePermissionsRequest {
+  permissions: RolePermissionResponse[];
+}
+
 export interface CreateLookupRequest {
   code: string;
   name: string;

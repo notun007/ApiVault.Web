@@ -79,6 +79,24 @@ export const routes: Routes = [
         loadComponent: () => import('./features/administration/users.component').then((m) => m.UsersComponent)
       },
       {
+        path: 'admin/security/user-access',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.Admin] },
+        loadComponent: () => import('./features/security/user-access.component').then((m) => m.UserAccessComponent)
+      },
+      {
+        path: 'admin/security/roles',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.Admin] },
+        loadComponent: () => import('./features/security/roles.component').then((m) => m.RolesComponent)
+      },
+      {
+        path: 'admin/security/permissions',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.Admin] },
+        loadComponent: () => import('./features/security/permissions.component').then((m) => m.PermissionsComponent)
+      },
+      {
         path: 'admin/audit',
         canActivate: [roleGuard],
         data: { roles: [UserRole.Admin] },

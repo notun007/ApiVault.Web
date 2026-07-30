@@ -1,0 +1,7 @@
+.security-error { margin-bottom: 1rem; }
+.permission-toolbar { display: grid; grid-template-columns: minmax(16rem, 24rem) 1fr; gap: 1.25rem; align-items: end; margin-bottom: 1rem; }
+.permission-toolbar p { margin: 0 0 0.65rem; color: var(--ink-muted); }
+.permission-cell { text-align: center; }
+.permission-cell input { width: 1.1rem; height: 1.1rem; accent-color: var(--teal); }
+.permission-table code { white-space: nowrap; }
+@media (max-width: 760px) { .permission-toolbar { grid-template-columns: 1fr; } .permission-table { min-width: 48rem; } }

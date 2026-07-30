@@ -1,0 +1,33 @@
+<app-page-header title="Role permissions" eyebrow="Security administration" description="Assign screen-level actions to a selected role. Users inherit access through their assigned roles.">
+  <button class="button button-primary" type="button" [disabled]="!selectedRoleId() || saving()" (click)="save()">{{ saving() ? 'Saving…' : 'Save permissions' }}</button>
+</app-page-header>
+
+@if (errorMessage()) { <div class="inline-alert error security-error">{{ errorMessage() }}</div> }
+
+<section class="panel permission-toolbar">
+  <label class="field"><span>Role</span><select class="select" [value]="selectedRoleId()" (change)="selectRole($event)"><option value="">Select a role</option>@for (role of roles(); track role.id) { <option [value]="role.id">{{ role.name }} ({{ role.code }})</option> }</select></label>
+  <p>Choose the actions this role can perform on each screen.</p>
+</section>
+
+<section class="panel">
+  @if (loading()) {
+    <div class="table-loading">Loading permissions…</div>
+  } @else if (screens().length === 0 || permissions().length === 0) {
+    <app-empty-state symbol="PM" title="No security metadata found" message="Create screens and permissions in the backend before assigning access."></app-empty-state>
+  } @else {
+    <div class="table-wrap"><table class="permission-table">
+      <thead><tr><th>Screen</th><th>Route</th>@for (permission of permissions(); track permission.id) { <th>{{ permission.name }}</th> }</tr></thead>
+      <tbody>
+        @for (screen of screens(); track screen.id) {
+          <tr>
+            <td><strong class="cell-strong">{{ screen.name }}</strong><small>{{ screen.code }}</small></td>
+            <td><code>{{ screen.route }}</code></td>
+            @for (permission of permissions(); track permission.id) {
+              <td class="permission-cell"><input type="checkbox" [checked]="isSelected(screen.id, permission.id)" (change)="toggle(screen.id, permission.id)" [attr.aria-label]="permission.name + ' on ' + screen.name"></td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table></div>
+  }
+</section>
