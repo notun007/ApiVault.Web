@@ -1,35 +1,34 @@
-<app-page-header [title]="editing() ? 'Edit API registration' : 'Register API'" eyebrow="Catalog administration" description="Capture ownership, business context, protocol, creator, and vendor information before adding releases and endpoints.">
+<app-page-header [title]="editing() ? 'Edit API' : 'Register API'" description="Create the API record and connect it to the application or system that publishes it.">
   <a class="button button-ghost" [routerLink]="editing() ? ['/apis', apiId] : ['/apis']">Cancel</a>
 </app-page-header>
 
 <form class="form-layout" [formGroup]="form" (ngSubmit)="save()">
   <section class="panel form-section">
-    <header class="section-heading"><span class="section-number">01</span><div><h2>API identity</h2><p>Use a clear business-facing name and the source code or vendor project name.</p></div></header>
+    <header class="section-heading"><div><h2>API details</h2><p>Select ownership and vendor first, then choose the matching publishing application.</p></div></header>
     <div class="form-grid two-column">
       <label class="field"><span>API name *</span><input class="input" formControlName="name" placeholder="e.g. Customer Profile API">@if (invalid('name')) { <small class="field-error">API name is required.</small> }</label>
-      <label class="field"><span>API project *</span><select class="select" formControlName="apiProjectId"><option value="">Select API project</option>@for (project of apiProjects(); track project.id) { <option [value]="project.id">{{ project.name }} ({{ project.code }})</option> }</select>@if (apiProjects().length === 0) { <small class="field-error">No active API projects. <a routerLink="/admin/api-projects">Add an API project</a>.</small> } @else if (invalid('apiProjectId')) { <small class="field-error">API project is required.</small> }</label>
-      <label class="field"><span>Ownership *</span><select class="select" formControlName="ownershipType">@for (value of ownershipTypes; track value) { <option [value]="value">{{ value | enumLabel }}</option> }</select></label>
-      <label class="field"><span>API type *</span><select class="select" formControlName="protocol">@for (value of protocols; track value) { <option [value]="value">{{ value | enumLabel }}</option> }</select></label>
-      <label class="field field-span"><span>Description</span><textarea class="textarea" rows="4" formControlName="description" placeholder="Purpose, main capabilities, consumers, and important constraints"></textarea></label>
+      <label class="field"><span>Protocol *</span><select class="select" formControlName="protocol">@for (value of protocols; track value) { <option [value]="value">{{ value | enumLabel }}</option> }</select></label>
+      <label class="field"><span>Ownership *</span><select class="select" formControlName="ownershipType" (change)="ownershipChanged()">@for (value of ownershipTypes; track value) { <option [value]="value">{{ value | enumLabel }}</option> }</select><small class="field-hint">Filters the available publishing applications.</small></label>
+      @if (form.controls.ownershipType.value === 'ThirdParty') {
+        <label class="field"><span>Vendor company *</span><select class="select" formControlName="vendorCompanyId" (change)="vendorChanged()"><option value="">Select vendor company</option>@for (vendor of vendors(); track vendor.id) { <option [value]="vendor.id">{{ vendor.name }} ({{ vendor.code }})</option> }</select>@if (vendorInvalid()) { <small class="field-error">Vendor company is required for third-party APIs.</small> }</label>
+      } @else {
+        <label class="field"><span>Vendor company</span><select class="select" disabled><option>Not applicable for internal APIs</option></select></label>
+      }
+      <label class="field field-span"><span>Publishing application *</span><select class="select" formControlName="publishingApplicationId"><option value="">Select application or system</option>@for (application of filteredApplications(); track application.id) { <option [value]="application.id">{{ application.name }} ({{ application.code }})</option> }</select>@if (applications().length === 0) { <small class="field-error">No active applications. <a routerLink="/projects">Register an application</a>.</small> } @else if (form.controls.ownershipType.value === 'ThirdParty' && !form.controls.vendorCompanyId.value) { <small class="field-hint">Select a vendor company to load its applications.</small> } @else if (filteredApplications().length === 0) { <small class="field-error">No matching active application. <a routerLink="/projects">Register or update an application</a>.</small> } @else if (invalid('publishingApplicationId')) { <small class="field-error">Publishing application is required.</small> }</label>
+      <label class="field field-span"><span>Description</span><textarea class="textarea" rows="4" formControlName="description" placeholder="Purpose, capabilities, consumers, and important constraints"></textarea></label>
     </div>
-  </section>
 
-  <section class="panel form-section">
-    <header class="section-heading"><span class="section-number">02</span><div><h2>Business ownership</h2><p>Identify the business domain and development team accountable for the API.</p></div></header>
-    <div class="form-grid two-column">
-      <label class="field"><span>Business area *</span><select class="select" formControlName="businessAreaId"><option value="">Select business area</option>@for (item of businessAreas(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select>@if (invalid('businessAreaId')) { <small class="field-error">Business area is required.</small> }</label>
-      <label class="field"><span>Development team *</span><select class="select" formControlName="developmentTeamId"><option value="">Select development team</option>@for (item of teams(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select>@if (invalid('developmentTeamId')) { <small class="field-error">Development team is required.</small> }</label>
-      <label class="field"><span>API creator *</span><input class="input" formControlName="creatorName" placeholder="Person or responsible unit">@if (invalid('creatorName')) { <small class="field-error">Creator is required.</small> }</label>
-      <label class="field"><span>Creator email</span><input class="input" type="email" formControlName="creatorEmail" placeholder="creator@bank.com">@if (invalid('creatorEmail')) { <small class="field-error">Enter a valid email address.</small> }</label>
-    </div>
-  </section>
+    @if (selectedApplication(); as application) {
+      <div class="inline-alert info application-summary">
+        <strong>{{ application.name }}</strong>
+        <span>{{ application.businessArea }} · {{ application.ownerTeam }} · {{ application.ownershipType === 'ThirdParty' ? 'Third Party' : 'Internal' }}@if (application.vendorName) { · {{ application.vendorName }} }</span>
+      </div>
+    }
 
-  <section class="panel form-section">
-    <header class="section-heading"><span class="section-number">03</span><div><h2>External provider</h2><p>Complete these fields for third-party APIs, vendor services, or external documentation.</p></div></header>
-    <div class="form-grid two-column">
-      <label class="field"><span>Vendor name</span><input class="input" formControlName="vendorName" placeholder="Vendor or provider"></label>
-      <label class="field"><span>External reference URL</span><input class="input" type="url" formControlName="externalReferenceUrl" placeholder="https://vendor.example/docs">@if (invalid('externalReferenceUrl')) { <small class="field-error">Enter a valid URL.</small> }</label>
-    </div>
+    <details class="optional-section">
+      <summary>Additional information</summary>
+      <label class="field"><span>External documentation URL</span><input class="input" type="url" formControlName="externalReferenceUrl" placeholder="https://docs.example.com/api">@if (invalid('externalReferenceUrl')) { <small class="field-error">Enter a valid URL.</small> }</label>
+    </details>
   </section>
 
   @if (errorMessage()) { <div class="inline-alert error"><strong>Could not save API</strong><span>{{ errorMessage() }}</span></div> }

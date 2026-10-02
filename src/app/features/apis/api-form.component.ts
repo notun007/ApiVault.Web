@@ -4,10 +4,11 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { readProblem } from '../../core/http/error.interceptor';
-import { ApiOwnershipType, ApiProtocol, ApiProjectResponse, CreateApiRequest, LookupResponse } from '../../core/models/api.models';
-import { AdminClient } from '../../core/services/admin.client';
+import { ApiOwnershipType, ApiProtocol, CreateApiRequest, VendorResponse } from '../../core/models/api.models';
+import { ProjectSummaryResponse } from '../../core/models/project.models';
 import { ApiCatalogClient } from '../../core/services/api-catalog.client';
-import { ApiProjectClient } from '../../core/services/api-project.client';
+import { AdminClient } from '../../core/services/admin.client';
+import { ProjectClient } from '../../core/services/project.client';
 import { ToastService } from '../../core/services/toast.service';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { EnumLabelPipe } from '../../shared/pipes/enum-label.pipe';
@@ -25,66 +26,63 @@ export class ApiFormComponent {
   private readonly router = inject(Router);
   private readonly apiClient = inject(ApiCatalogClient);
   private readonly adminClient = inject(AdminClient);
-  private readonly apiProjectClient = inject(ApiProjectClient);
+  private readonly projectClient = inject(ProjectClient);
   private readonly toast = inject(ToastService);
 
   readonly apiId = this.route.snapshot.paramMap.get('id') ?? '';
   readonly editing = signal(!!this.apiId);
   readonly saving = signal(false);
   readonly errorMessage = signal('');
-  readonly businessAreas = signal<LookupResponse[]>([]);
-  readonly teams = signal<LookupResponse[]>([]);
-  readonly apiProjects = signal<ApiProjectResponse[]>([]);
-  readonly ownershipTypes = Object.values(ApiOwnershipType);
+  readonly applications = signal<ProjectSummaryResponse[]>([]);
+  readonly vendors = signal<VendorResponse[]>([]);
   readonly protocols = Object.values(ApiProtocol);
+  readonly ownershipTypes = Object.values(ApiOwnershipType);
 
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(200)]],
-    apiProjectId: ['', Validators.required],
-    description: ['', Validators.maxLength(4000)],
     ownershipType: [ApiOwnershipType.Internal, Validators.required],
+    vendorCompanyId: [''],
+    publishingApplicationId: ['', Validators.required],
     protocol: [ApiProtocol.Rest, Validators.required],
-    creatorName: ['', [Validators.required, Validators.maxLength(200)]],
-    creatorEmail: ['', Validators.email],
-    vendorName: ['', Validators.maxLength(200)],
-    externalReferenceUrl: ['', Validators.pattern(/^https?:\/\/.+/i)],
-    businessAreaId: ['', Validators.required],
-    developmentTeamId: ['', Validators.required]
+    description: ['', Validators.maxLength(4000)],
+    externalReferenceUrl: ['', Validators.pattern(/^https?:\/\/.+/i)]
   });
+
+  filteredApplications(): ProjectSummaryResponse[] {
+    const ownershipType = this.form.controls.ownershipType.value;
+    const vendorCompanyId = this.form.controls.vendorCompanyId.value;
+    return this.applications().filter((application) =>
+      application.ownershipType === ownershipType
+      && (ownershipType !== ApiOwnershipType.ThirdParty || (!!vendorCompanyId && application.vendorId === vendorCompanyId))
+    );
+  }
 
   constructor() {
     forkJoin({
-      businessAreas: this.adminClient.getBusinessAreas(),
-      teams: this.adminClient.getDevelopmentTeams(),
-      apiProjects: this.apiProjectClient.getActive(),
+      applications: this.projectClient.getAll(true),
+      vendors: this.adminClient.getVendors(true),
       api: this.apiId ? this.apiClient.get(this.apiId) : of(null)
     }).subscribe({
-      next: ({ businessAreas, teams, apiProjects, api }) => {
-        this.businessAreas.set(businessAreas);
-        this.teams.set(teams);
-        this.apiProjects.set(apiProjects);
+      next: ({ applications, vendors, api }) => {
+        this.applications.set(applications);
+        this.vendors.set(vendors);
         if (api) {
+          const publishingApplication = applications.find((application) => application.id === api.publishingApplicationId);
           this.form.patchValue({
             name: api.name,
-            apiProjectId: api.apiProjectId,
-            description: api.description ?? '',
-            ownershipType: api.ownershipType,
+            ownershipType: publishingApplication?.ownershipType ?? api.ownershipType,
+            vendorCompanyId: publishingApplication?.vendorId ?? '',
+            publishingApplicationId: api.publishingApplicationId,
             protocol: api.protocol,
-            creatorName: api.creatorName,
-            creatorEmail: api.creatorEmail ?? '',
-            vendorName: api.vendorName ?? '',
-            externalReferenceUrl: api.externalReferenceUrl ?? '',
-            businessAreaId: api.businessArea.id,
-            developmentTeamId: api.developmentTeam.id
+            description: api.description ?? '',
+            externalReferenceUrl: api.externalReferenceUrl ?? ''
           });
         }
       },
-      error: (error: HttpErrorResponse) => {
-        this.errorMessage.set(readProblem(
-          error,
-          'Could not load API registration data. Check that ApiVault.Api is running and reachable.'
-        ));
-      }
+      error: (error: HttpErrorResponse) => this.errorMessage.set(readProblem(
+        error,
+        'Could not load API registration data. Check that ApiVault.Api is running and reachable.'
+      ))
     });
   }
 
@@ -93,7 +91,29 @@ export class ApiFormComponent {
     return control.invalid && (control.touched || control.dirty);
   }
 
+  selectedApplication(): ProjectSummaryResponse | undefined {
+    return this.applications().find((item) => item.id === this.form.controls.publishingApplicationId.value);
+  }
+
+  ownershipChanged(): void {
+    this.form.patchValue({ vendorCompanyId: '', publishingApplicationId: '' });
+  }
+
+  vendorChanged(): void {
+    this.form.controls.publishingApplicationId.setValue('');
+  }
+
+  vendorInvalid(): boolean {
+    return this.form.controls.ownershipType.value === ApiOwnershipType.ThirdParty
+      && !this.form.controls.vendorCompanyId.value
+      && (this.form.controls.vendorCompanyId.touched || this.form.controls.publishingApplicationId.touched);
+  }
+
   save(): void {
+    if (this.form.controls.ownershipType.value === ApiOwnershipType.ThirdParty && !this.form.controls.vendorCompanyId.value) {
+      this.form.controls.vendorCompanyId.markAsTouched();
+      return;
+    }
     if (this.form.invalid || this.saving()) {
       this.form.markAllAsTouched();
       return;
@@ -102,10 +122,10 @@ export class ApiFormComponent {
     this.errorMessage.set('');
     const value = this.form.getRawValue();
     const request: CreateApiRequest = {
-      ...value,
+      name: value.name,
+      publishingApplicationId: value.publishingApplicationId,
+      protocol: value.protocol,
       description: value.description || null,
-      creatorEmail: value.creatorEmail || null,
-      vendorName: value.vendorName || null,
       externalReferenceUrl: value.externalReferenceUrl || null
     };
     const operation = this.apiId ? this.apiClient.update(this.apiId, request) : this.apiClient.create(request);

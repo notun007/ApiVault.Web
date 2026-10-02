@@ -6,7 +6,6 @@ import {
   ApiLifecycleStatus,
   ApiOwnershipType,
   ApiProtocol,
-  ApiProjectResponse,
   ApiSearchQuery,
   ApiSummaryResponse,
   LookupResponse,
@@ -15,7 +14,8 @@ import {
 import { UserRole } from '../../core/models/security.models';
 import { AdminClient } from '../../core/services/admin.client';
 import { ApiCatalogClient } from '../../core/services/api-catalog.client';
-import { ApiProjectClient } from '../../core/services/api-project.client';
+import { ProjectSummaryResponse } from '../../core/models/project.models';
+import { ProjectClient } from '../../core/services/project.client';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { EnumLabelPipe } from '../../shared/pipes/enum-label.pipe';
@@ -30,16 +30,15 @@ import { EnumLabelPipe } from '../../shared/pipes/enum-label.pipe';
 export class ApiListComponent {
   private readonly fb = inject(FormBuilder);
   private readonly apiClient = inject(ApiCatalogClient);
-  private readonly apiProjectClient = inject(ApiProjectClient);
+  private readonly projectClient = inject(ProjectClient);
   private readonly adminClient = inject(AdminClient);
   private readonly auth = inject(AuthService);
 
   readonly ownershipTypes = Object.values(ApiOwnershipType);
   readonly protocols = Object.values(ApiProtocol);
   readonly lifecycleStatuses = Object.values(ApiLifecycleStatus);
-  readonly businessAreas = signal<LookupResponse[]>([]);
   readonly teams = signal<LookupResponse[]>([]);
-  readonly apiProjects = signal<ApiProjectResponse[]>([]);
+  readonly applications = signal<ProjectSummaryResponse[]>([]);
   readonly loading = signal(true);
   readonly result = signal<PagedResult<ApiSummaryResponse>>({ items: [], page: 1, pageSize: 25, totalCount: 0, totalPages: 0 });
   readonly canManage = () => this.auth.hasAnyRole(UserRole.Admin, UserRole.ApiOwner);
@@ -49,15 +48,13 @@ export class ApiListComponent {
     ownershipType: '',
     protocol: '',
     lifecycleStatus: '',
-    businessAreaId: '',
     developmentTeamId: '',
-    apiProjectId: ''
+    publishingApplicationId: ''
   });
 
   constructor() {
-    this.adminClient.getBusinessAreas().subscribe((items) => this.businessAreas.set(items));
     this.adminClient.getDevelopmentTeams().subscribe((items) => this.teams.set(items));
-    this.apiProjectClient.getActive().subscribe((items) => this.apiProjects.set(items));
+    this.projectClient.getAll(true).subscribe((items) => this.applications.set(items));
     this.search(1);
   }
 
@@ -69,9 +66,8 @@ export class ApiListComponent {
       ownershipType: filters.ownershipType as ApiOwnershipType | '',
       protocol: filters.protocol as ApiProtocol | '',
       lifecycleStatus: filters.lifecycleStatus as ApiLifecycleStatus | '',
-      businessAreaId: filters.businessAreaId,
       developmentTeamId: filters.developmentTeamId,
-      apiProjectId: filters.apiProjectId,
+      publishingApplicationId: filters.publishingApplicationId,
       page,
       pageSize: this.result().pageSize
     };
@@ -92,6 +88,4 @@ export class ApiListComponent {
     this.result.update((result) => ({ ...result, pageSize }));
     this.search(1);
   }
-
-  statusClass(status?: string | null): string { return status ? `status-${status.toLowerCase()}` : 'status-neutral'; }
 }
