@@ -1,0 +1,24 @@
+<app-page-header title="Vendor companies" eyebrow="Third-party registry" description="Maintain the external companies that supply or support ApiVault source systems.">
+  <button class="button button-primary" type="button" (click)="open()">+ Add vendor</button>
+</app-page-header>
+<section class="panel">
+  <header class="panel-header"><div><h2>Registered vendors</h2><p>{{ vendors().length }} entries</p></div></header>
+  @if (loading()) { <div class="table-loading">Loading vendors…</div> }
+  @else if (vendors().length === 0) { <app-empty-state symbol="VN" title="No vendors registered" message="Add a vendor before registering a third-party source system."></app-empty-state> }
+  @else { <div class="table-wrap"><table><thead><tr><th>Code</th><th>Vendor</th><th>Support contact</th><th>Systems</th><th>Status</th><th></th></tr></thead><tbody>
+    @for (vendor of vendors(); track vendor.id) { <tr><td><code>{{ vendor.code }}</code></td><td><strong class="cell-strong">{{ vendor.name }}</strong><small>{{ vendor.description || 'No description' }}</small></td><td>{{ vendor.supportEmail || vendor.supportPhone || '—' }}</td><td>{{ vendor.systemCount }}</td><td><span class="badge" [class.status-active]="vendor.isActive" [class.status-retired]="!vendor.isActive">{{ vendor.isActive ? 'Active' : 'Inactive' }}</span></td><td class="actions-cell"><button class="button button-ghost button-small" type="button" (click)="open(vendor)">Edit</button></td></tr> }
+  </tbody></table></div> }
+</section>
+<app-modal [open]="modalOpen()" [wide]="true" [title]="editing() ? 'Edit vendor company' : 'Add vendor company'" eyebrow="Third-party registry" (closed)="modalOpen.set(false)">
+  <form class="modal-form" [formGroup]="form" (ngSubmit)="save()"><div class="form-grid two-column">
+    <label class="field"><span>Vendor code *</span><input class="input code-input" formControlName="code"></label>
+    <label class="field"><span>Vendor name *</span><input class="input" formControlName="name"></label>
+    <label class="field"><span>Contact person</span><input class="input" formControlName="contactPerson"></label>
+    <label class="field"><span>Support email</span><input class="input" type="email" formControlName="supportEmail"></label>
+    <label class="field"><span>Support phone</span><input class="input" formControlName="supportPhone"></label>
+    <label class="field"><span>Website</span><input class="input" type="url" formControlName="websiteUrl" placeholder="https://vendor.example"></label>
+    <label class="field field-span"><span>Description</span><textarea class="textarea" rows="3" formControlName="description"></textarea></label>
+  </div><label class="switch-field"><input type="checkbox" formControlName="isActive"><span class="switch"></span><div><strong>Active vendor</strong><small>Only active vendors can be selected for new source systems.</small></div></label>
+  @if (errorMessage()) { <div class="inline-alert error">{{ errorMessage() }}</div> }
+  <div class="modal-actions"><button class="button button-ghost" type="button" (click)="modalOpen.set(false)">Cancel</button><button class="button button-primary" type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save vendor' }}</button></div></form>
+</app-modal>
