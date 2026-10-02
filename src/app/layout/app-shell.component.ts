@@ -32,6 +32,7 @@ export class AppShellComponent {
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(ToastService);
   readonly mobileSidebarOpen = signal(false);
+  readonly sidebarCollapsed = signal(false);
   readonly passwordModalOpen = signal(false);
   readonly passwordSaving = signal(false);
   readonly passwordError = signal('');
@@ -61,6 +62,7 @@ export class AppShellComponent {
   readonly initials = computed(() => this.auth.displayName().split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'AV');
 
   closeMobileSidebar(): void { this.mobileSidebarOpen.set(false); }
+  toggleSidebar(): void { this.sidebarCollapsed.update((collapsed) => !collapsed); }
 
   openPasswordModal(): void {
     this.passwordForm.reset();

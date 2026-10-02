@@ -1,5 +1,12 @@
-<div class="app-frame" [class.sidebar-open]="mobileSidebarOpen()">
+<div class="app-frame" [class.sidebar-open]="mobileSidebarOpen()" [class.sidebar-collapsed]="sidebarCollapsed()">
   <aside class="sidebar">
+    <button type="button" class="sidebar-toggle" [attr.aria-label]="sidebarCollapsed() ? 'Expand navigation' : 'Collapse navigation'" [attr.aria-expanded]="!sidebarCollapsed()" [attr.title]="sidebarCollapsed() ? 'Expand navigation' : 'Collapse navigation'" (click)="toggleSidebar()">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="4"></rect>
+        <path d="M8.5 3v18"></path>
+        <path class="toggle-chevron" d="m15.5 8.5-3.5 3.5 3.5 3.5"></path>
+      </svg>
+    </button>
     <a class="brand" routerLink="/dashboard" (click)="closeMobileSidebar()">
       <span class="brand-mark">AV</span>
       <span><strong>{{ runtime.config().applicationName }}</strong><small>API Governance</small></span>
@@ -12,7 +19,7 @@
 
     <nav class="main-nav" aria-label="Primary navigation">
       @for (item of visibleNav(); track item.path) {
-        <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' }" (click)="closeMobileSidebar()">
+        <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' }" [attr.title]="sidebarCollapsed() ? item.label : null" (click)="closeMobileSidebar()">
           <span class="nav-icon">{{ item.icon }}</span>
           <span><strong>{{ item.label }}</strong><small>{{ item.caption }}</small></span>
         </a>
@@ -30,7 +37,9 @@
   <div class="workspace">
     <header class="topbar">
       <div class="topbar-left">
-        <button type="button" class="mobile-menu" aria-label="Open navigation" (click)="mobileSidebarOpen.set(true)">☰</button>
+        <button type="button" class="mobile-menu" aria-label="Open navigation" (click)="mobileSidebarOpen.set(true)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"></path></svg>
+        </button>
         <div>
           <span class="topbar-kicker">Enterprise API repository</span>
           <strong>Inventory · Governance · Testing</strong>
