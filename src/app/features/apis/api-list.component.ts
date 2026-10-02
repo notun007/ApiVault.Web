@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
@@ -6,6 +6,7 @@ import {
   ApiLifecycleStatus,
   ApiOwnershipType,
   ApiProtocol,
+  ApiCatalogSortField,
   ApiSearchQuery,
   ApiSummaryResponse,
   LookupResponse,
@@ -41,6 +42,10 @@ export class ApiListComponent {
   readonly applications = signal<ProjectSummaryResponse[]>([]);
   readonly loading = signal(true);
   readonly result = signal<PagedResult<ApiSummaryResponse>>({ items: [], page: 1, pageSize: 25, totalCount: 0, totalPages: 0 });
+  readonly sortBy = signal<ApiCatalogSortField>('Name');
+  readonly sortDescending = signal(false);
+  readonly firstVisibleRecord = computed(() => this.result().totalCount === 0 ? 0 : ((this.result().page - 1) * this.result().pageSize) + 1);
+  readonly lastVisibleRecord = computed(() => Math.min(this.result().page * this.result().pageSize, this.result().totalCount));
   readonly canManage = () => this.auth.hasAnyRole(UserRole.Admin, UserRole.ApiOwner);
 
   readonly filters = this.fb.nonNullable.group({
@@ -68,6 +73,8 @@ export class ApiListComponent {
       lifecycleStatus: filters.lifecycleStatus as ApiLifecycleStatus | '',
       developmentTeamId: filters.developmentTeamId,
       publishingApplicationId: filters.publishingApplicationId,
+      sortBy: this.sortBy(),
+      sortDescending: this.sortDescending(),
       page,
       pageSize: this.result().pageSize
     };
@@ -87,5 +94,20 @@ export class ApiListComponent {
     const pageSize = Number((event.target as HTMLSelectElement).value);
     this.result.update((result) => ({ ...result, pageSize }));
     this.search(1);
+  }
+
+  changeSort(field: ApiCatalogSortField): void {
+    if (this.sortBy() === field) {
+      this.sortDescending.update((descending) => !descending);
+    } else {
+      this.sortBy.set(field);
+      this.sortDescending.set(false);
+    }
+    this.search(1);
+  }
+
+  sortAria(field: ApiCatalogSortField): 'ascending' | 'descending' | 'none' {
+    if (this.sortBy() !== field) return 'none';
+    return this.sortDescending() ? 'descending' : 'ascending';
   }
 }

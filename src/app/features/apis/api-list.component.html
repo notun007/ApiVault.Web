@@ -15,7 +15,7 @@
 </section>
 
 <section class="panel">
-  <header class="panel-header table-header"><div><h2>Registered APIs</h2><p>{{ result().totalCount }} records found</p></div><label class="page-size">Rows <select class="select compact" [value]="result().pageSize" (change)="changePageSize($event)"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></label></header>
+  <header class="panel-header table-header"><div><h2>Registered APIs</h2><p>{{ result().totalCount }} records found</p></div></header>
   @if (loading()) {
     <div class="table-loading">Loading API catalog…</div>
   } @else if (result().items.length === 0) {
@@ -23,7 +23,15 @@
   } @else {
     <div class="table-wrap">
       <table>
-        <thead><tr><th>API</th><th>Ownership</th><th>Protocol</th><th>Business</th><th>Current release</th><th>Versions</th><th></th></tr></thead>
+        <thead><tr>
+          <th [attr.aria-sort]="sortAria('Name')"><button class="sort-button" type="button" (click)="changeSort('Name')">API <span class="sort-indicator">{{ sortBy() === 'Name' ? (sortDescending() ? '↓' : '↑') : '↕' }}</span></button></th>
+          <th [attr.aria-sort]="sortAria('Ownership')"><button class="sort-button" type="button" (click)="changeSort('Ownership')">Ownership <span class="sort-indicator">{{ sortBy() === 'Ownership' ? (sortDescending() ? '↓' : '↑') : '↕' }}</span></button></th>
+          <th [attr.aria-sort]="sortAria('Protocol')"><button class="sort-button" type="button" (click)="changeSort('Protocol')">Protocol <span class="sort-indicator">{{ sortBy() === 'Protocol' ? (sortDescending() ? '↓' : '↑') : '↕' }}</span></button></th>
+          <th [attr.aria-sort]="sortAria('Business')"><button class="sort-button" type="button" (click)="changeSort('Business')">Business <span class="sort-indicator">{{ sortBy() === 'Business' ? (sortDescending() ? '↓' : '↑') : '↕' }}</span></button></th>
+          <th [attr.aria-sort]="sortAria('CurrentRelease')"><button class="sort-button" type="button" (click)="changeSort('CurrentRelease')">Current release <span class="sort-indicator">{{ sortBy() === 'CurrentRelease' ? (sortDescending() ? '↓' : '↑') : '↕' }}</span></button></th>
+          <th [attr.aria-sort]="sortAria('Versions')"><button class="sort-button" type="button" (click)="changeSort('Versions')">Versions <span class="sort-indicator">{{ sortBy() === 'Versions' ? (sortDescending() ? '↓' : '↑') : '↕' }}</span></button></th>
+          <th><span class="visually-hidden">Actions</span></th>
+        </tr></thead>
         <tbody>
           @for (api of result().items; track api.id) {
             <tr>
@@ -39,9 +47,14 @@
         </tbody>
       </table>
     </div>
-    <footer class="pagination">
-      <span>Page {{ result().page }} of {{ result().totalPages || 1 }}</span>
-      <div><button class="button button-ghost button-small" [disabled]="result().page <= 1" (click)="search(result().page - 1)">Previous</button><button class="button button-ghost button-small" [disabled]="result().page >= result().totalPages" (click)="search(result().page + 1)">Next</button></div>
+    <footer class="pagination api-pagination">
+      <span>Showing {{ firstVisibleRecord() }}–{{ lastVisibleRecord() }} of {{ result().totalCount }}</span>
+      <nav class="pagination-controls" aria-label="Registered APIs pagination">
+        <label class="page-size">Rows <select class="select compact" [value]="result().pageSize" (change)="changePageSize($event)"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></label>
+        <span>Page {{ result().page }} of {{ result().totalPages || 1 }}</span>
+        <button class="button button-ghost button-small" type="button" [disabled]="result().page <= 1" (click)="search(result().page - 1)">Previous</button>
+        <button class="button button-ghost button-small" type="button" [disabled]="result().page >= result().totalPages" (click)="search(result().page + 1)">Next</button>
+      </nav>
     </footer>
   }
 </section>

@@ -72,6 +72,8 @@ export interface PagedResult<T> {
   totalPages: number;
 }
 
+export type ApiCatalogSortField = 'Name' | 'Ownership' | 'Protocol' | 'Business' | 'CurrentRelease' | 'Versions';
+
 export interface ApiSearchQuery {
   search?: string;
   ownershipType?: ApiOwnershipType | '';
@@ -80,6 +82,8 @@ export interface ApiSearchQuery {
   businessAreaId?: string;
   developmentTeamId?: string;
   publishingApplicationId?: string;
+  sortBy?: ApiCatalogSortField;
+  sortDescending?: boolean;
   page?: number;
   pageSize?: number;
 }
