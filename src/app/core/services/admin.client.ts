@@ -2,7 +2,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { RuntimeConfigService } from '../config/runtime-config.service';
 import { LookupResponse } from '../models/api.models';
-import { CreateLookupRequest, CreateUserRequest, UpdateUserRolesRequest, UserAccessResponse, UserResponse } from '../models/security.models';
+import { SaveVendorRequest, VendorResponse } from '../models/api.models';
+import { CreateLookupRequest, CreateUserRequest, ResetPasswordRequest, UpdateUserRolesRequest, UserAccessResponse, UserResponse } from '../models/security.models';
 import { AuditLogResponse } from '../models/test.models';
 
 @Injectable({ providedIn: 'root' })
@@ -32,6 +33,22 @@ export class AdminClient {
 
   createUser(request: CreateUserRequest) {
     return this.http.post<UserResponse>(this.runtime.apiUrl('/api/users'), request);
+  }
+
+  getVendors(activeOnly = false) {
+    return this.http.get<VendorResponse[]>(this.runtime.apiUrl('/api/vendors'), { params: { activeOnly } });
+  }
+
+  createVendor(request: SaveVendorRequest) {
+    return this.http.post<VendorResponse>(this.runtime.apiUrl('/api/vendors'), request);
+  }
+
+  updateVendor(id: string, request: SaveVendorRequest) {
+    return this.http.put<VendorResponse>(this.runtime.apiUrl(`/api/vendors/${id}`), request);
+  }
+
+  resetUserPassword(userId: string, request: ResetPasswordRequest) {
+    return this.http.put<void>(this.runtime.apiUrl(`/api/users/${userId}/password`), request);
   }
 
   getUserAccess() {

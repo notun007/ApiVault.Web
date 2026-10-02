@@ -1,4 +1,5 @@
 export enum UserRole {
+  SuperAdmin = 'SuperAdmin',
   Admin = 'Admin',
   ApiOwner = 'ApiOwner',
   Tester = 'Tester',
@@ -17,6 +18,17 @@ export interface LoginResponse {
   role: UserRole;
   isSuccess: boolean;
   message?: string | null;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ResetPasswordRequest {
+  newPassword: string;
+  confirmPassword: string;
 }
 
 export interface AuthSession extends LoginResponse {

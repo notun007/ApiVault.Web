@@ -13,8 +13,8 @@ export class ProjectClient {
   private readonly http = inject(HttpClient);
   private readonly runtime = inject(RuntimeConfigService);
 
-  getAll() {
-    return this.http.get<ProjectSummaryResponse[]>(this.runtime.apiUrl('/api/projects'));
+  getAll(activeOnly = false) {
+    return this.http.get<ProjectSummaryResponse[]>(this.runtime.apiUrl('/api/projects'), { params: { activeOnly } });
   }
 
   get(id: string) {
@@ -23,6 +23,10 @@ export class ProjectClient {
 
   create(request: CreateProjectRequest) {
     return this.http.post<ProjectDetailResponse>(this.runtime.apiUrl('/api/projects'), request);
+  }
+
+  update(id: string, request: CreateProjectRequest) {
+    return this.http.put<ProjectDetailResponse>(this.runtime.apiUrl(`/api/projects/${id}`), request);
   }
 
   linkApiVersion(projectId: string, request: LinkProjectApiVersionRequest) {
