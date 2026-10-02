@@ -47,6 +47,42 @@
   padding-right: 62px;
 }
 
+.sidebar {
+  overflow: hidden;
+}
+
+.sidebar .brand {
+  flex: 0 0 auto;
+}
+
+.sidebar-body {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-color: rgba(186, 224, 218, 0.55) transparent;
+  scrollbar-width: thin;
+}
+
+.sidebar-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-body::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(186, 224, 218, 0.48);
+}
+
+.sidebar-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(216, 244, 239, 0.72);
+}
+
 .sidebar-toggle:hover,
 .mobile-menu:hover {
   transform: translateY(-1px);
@@ -68,6 +104,16 @@
 .toggle-chevron {
   transform-origin: 14px 12px;
   transition: transform 0.22s ease;
+}
+
+.nav-icon svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .sidebar-collapsed {
