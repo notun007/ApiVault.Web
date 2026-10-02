@@ -1,5 +1,21 @@
-/*
- * Component stylesheet.
- * Shared ApiVault design-system rules remain in src/styles.scss so the
- * regenerated project keeps the exact existing layout and behavior.
- */
+.page-header.compact {
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.page-header.compact .eyebrow {
+  margin-bottom: 3px;
+  font-size: 9px;
+}
+
+.page-header.compact h1 {
+  margin-bottom: 4px;
+  font-size: clamp(23px, 2.2vw, 30px);
+  line-height: 1.05;
+}
+
+.page-header.compact p {
+  max-width: 720px;
+  font-size: 11px;
+  line-height: 1.35;
+}

@@ -10,4 +10,5 @@ export class PageHeaderComponent {
   @Input({ required: true }) title = '';
   @Input() eyebrow = '';
   @Input() description = '';
+  @Input() compact = false;
 }
