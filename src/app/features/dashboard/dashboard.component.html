@@ -8,7 +8,7 @@
   <section class="stat-grid">
     <article class="stat-card"><span class="stat-label">Registered APIs</span><strong>{{ apis().length }}</strong><small>{{ internalApiCount() }} internal · {{ thirdPartyApiCount() }} third-party</small></article>
     <article class="stat-card"><span class="stat-label">Active releases</span><strong>{{ activeCount() }}</strong><small>{{ deprecatedCount() }} deprecated · {{ retiredCount() }} retired</small></article>
-    <article class="stat-card"><span class="stat-label">Registered projects</span><strong>{{ projects().length }}</strong><small>{{ criticalProjects() }} critical business applications</small></article>
+    <article class="stat-card"><span class="stat-label">Consumer applications</span><strong>{{ projects().length }}</strong><small>{{ criticalProjects() }} critical business applications</small></article>
     <article class="stat-card"><span class="stat-label">Recent executions</span><strong>{{ tests().length }}</strong><small>{{ successfulTests() }} successful in retained sample</small></article>
   </section>
 }
@@ -29,7 +29,7 @@
           <thead><tr><th>API</th><th>Business</th><th>Current release</th><th>Status</th></tr></thead>
           <tbody>
             @for (api of apis().slice(0, 6); track api.id) {
-              <tr><td><a class="table-link" [routerLink]="['/apis', api.id]">{{ api.name }}</a><small>{{ api.apiProject.name }}</small></td><td>{{ api.businessArea }}</td><td>{{ api.currentVersion || 'Not released' }}</td><td><span class="badge" [class]="'badge ' + statusClass(api.currentLifecycleStatus)">{{ api.currentLifecycleStatus || 'No version' }}</span></td></tr>
+              <tr><td><a class="table-link" [routerLink]="['/apis', api.id]">{{ api.name }}</a><small>{{ api.publishingApplication.name }}</small></td><td>{{ api.businessArea }}</td><td>{{ api.currentVersion || 'Not released' }}</td><td><span class="badge" [class]="'badge ' + statusClass(api.currentLifecycleStatus)">{{ api.currentLifecycleStatus || 'No version' }}</span></td></tr>
             }
           </tbody>
         </table>

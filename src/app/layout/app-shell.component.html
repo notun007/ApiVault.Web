@@ -42,6 +42,7 @@
           <strong>{{ auth.displayName() }}</strong>
           <span>{{ auth.role() | enumLabel }}</span>
         </div>
+        <button type="button" class="button button-ghost button-small" (click)="openPasswordModal()">Change password</button>
         <button type="button" class="button button-ghost button-small" (click)="logout()">Sign out</button>
       </div>
     </header>
@@ -49,3 +50,13 @@
     <main class="content"><router-outlet /></main>
   </div>
 </div>
+
+<app-modal [open]="passwordModalOpen()" title="Change password" eyebrow="Account security" (closed)="passwordModalOpen.set(false)">
+  <form class="modal-form" [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+    <label class="field"><span>Current password *</span><input class="input" type="password" formControlName="currentPassword" autocomplete="current-password"></label>
+    <label class="field"><span>New password *</span><input class="input" type="password" formControlName="newPassword" autocomplete="new-password"><small>Use at least 12 characters.</small></label>
+    <label class="field"><span>Confirm new password *</span><input class="input" type="password" formControlName="confirmPassword" autocomplete="new-password"></label>
+    @if (passwordError()) { <div class="inline-alert error">{{ passwordError() }}</div> }
+    <div class="modal-actions"><button class="button button-ghost" type="button" (click)="passwordModalOpen.set(false)">Cancel</button><button class="button button-primary" type="submit" [disabled]="passwordSaving()">{{ passwordSaving() ? 'Changing…' : 'Change password' }}</button></div>
+  </form>
+</app-modal>

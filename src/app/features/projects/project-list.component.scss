@@ -1,5 +1,84 @@
-/*
- * Component stylesheet.
- * Shared ApiVault design-system rules remain in src/styles.scss so the
- * regenerated project keeps the exact existing layout and behavior.
- */
+.application-table-wrap {
+  margin-top: 2px;
+}
+
+.application-grid-header {
+  align-items: flex-end;
+}
+
+.grid-sort-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.compact-sort {
+  width: 180px;
+}
+
+.sort-direction {
+  min-width: 112px;
+}
+
+.application-table {
+  min-width: 820px;
+}
+
+.application-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.application-table tbody tr:hover {
+  background: var(--brand-50);
+}
+
+.application-identity {
+  min-width: 210px;
+}
+
+.application-identity .table-link {
+  font-size: 13px;
+}
+
+.table-value {
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.application-pagination {
+  margin-top: 0;
+}
+
+.pagination-controls {
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .application-grid-header,
+  .grid-sort-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .compact-sort,
+  .sort-direction {
+    width: 100%;
+  }
+
+  .application-table {
+    min-width: 760px;
+  }
+
+  .application-pagination,
+  .pagination-controls {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+}

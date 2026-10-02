@@ -1,7 +1,7 @@
-@if (loading()) { <div class="detail-loading"><div class="spinner"></div><span>Loading project dependencies…</span></div> }
+@if (loading()) { <div class="detail-loading"><div class="spinner"></div><span>Loading application dependencies…</span></div> }
 @else if (project(); as item) {
-  <app-page-header [title]="item.name" [eyebrow]="item.code" [description]="item.description || 'No project description has been supplied.'">
-    <a class="button button-ghost" routerLink="/projects">← Projects</a>
+  <app-page-header [title]="item.name" [eyebrow]="item.code" [description]="item.description || 'No application description has been supplied.'">
+    <a class="button button-ghost" routerLink="/projects">← Applications &amp; Systems</a>
     @if (canManage()) { <button class="button button-primary" type="button" (click)="openLink()">+ Link API version</button> }
   </app-page-header>
 
@@ -13,9 +13,25 @@
   </section>
 
   <section class="panel">
+    <header class="panel-header"><div><span class="eyebrow">Publishing relationships</span><h2>Published APIs</h2><p>APIs owned and published by this application or system.</p></div><span class="count-pill large">{{ item.publishedApis.length }}</span></header>
+    @if (item.publishedApis.length === 0) {
+      <app-empty-state symbol="PB" title="No APIs published" message="This application becomes a publisher automatically when an API is registered against it."></app-empty-state>
+    } @else {
+      <div class="dependency-grid">
+        @for (api of item.publishedApis; track api.apiId) {
+          <article class="dependency-card">
+            <header><div><span class="eyebrow">Published API</span><h3>{{ api.apiName }}</h3></div><span class="count-pill">{{ api.versionCount }} versions</span></header>
+            <footer><a class="button button-ghost button-small" [routerLink]="['/apis', api.apiId]">Open API record</a></footer>
+          </article>
+        }
+      </div>
+    }
+  </section>
+
+  <section class="panel">
     <header class="panel-header"><div><span class="eyebrow">Exact release dependencies</span><h2>Consumed API versions</h2><p>Each link identifies the exact API release used by this application.</p></div><span class="count-pill large">{{ item.apiVersions.length }}</span></header>
     @if (item.apiVersions.length === 0) {
-      <app-empty-state symbol="LK" title="No API dependencies linked" message="Link the exact release used by this project for impact analysis and governance.">@if (canManage()) { <button class="button button-primary button-small" type="button" (click)="openLink()">Link API version</button> }</app-empty-state>
+      <app-empty-state symbol="LK" title="No API dependencies linked" message="Link the exact release used by this application for impact analysis and governance.">@if (canManage()) { <button class="button button-primary button-small" type="button" (click)="openLink()">Link API version</button> }</app-empty-state>
     } @else {
       <div class="dependency-grid">
         @for (link of item.apiVersions; track link.linkId) {
@@ -31,12 +47,12 @@
   </section>
 }
 
-<app-modal [open]="modalOpen()" title="Link exact API version" eyebrow="Project dependency" (closed)="modalOpen.set(false)">
+<app-modal [open]="modalOpen()" title="Link exact API version" eyebrow="Application dependency" (closed)="modalOpen.set(false)">
   <form class="modal-form" [formGroup]="form" (ngSubmit)="saveLink()">
-    <label class="field"><span>API *</span><select class="select" formControlName="apiId" (change)="loadApiVersions()"><option value="">Select registered API</option>@for (api of apis(); track api.id) { <option [value]="api.id">{{ api.name }} — {{ api.apiProject.name }}</option> }</select></label>
+    <label class="field"><span>API *</span><select class="select" formControlName="apiId" (change)="loadApiVersions()"><option value="">Select registered API</option>@for (api of apis(); track api.id) { <option [value]="api.id">{{ api.name }} — {{ api.publishingApplication.name }}</option> }</select></label>
     <label class="field"><span>Exact release *</span><select class="select" formControlName="apiVersionId"><option value="">Select version</option>@for (version of availableVersions(); track version.id) { <option [value]="version.id">v{{ version.version }} — {{ version.releaseName || 'Unnamed' }} ({{ version.lifecycleStatus }})</option> }</select></label>
-    <label class="field"><span>Purpose</span><textarea class="textarea" rows="4" formControlName="purpose" placeholder="How this project uses the API"></textarea></label>
-    <label class="switch-field"><input type="checkbox" formControlName="isRequired"><span class="switch"></span><div><strong>Required dependency</strong><small>The project cannot operate correctly without this API release.</small></div></label>
+    <label class="field"><span>Purpose</span><textarea class="textarea" rows="4" formControlName="purpose" placeholder="How this application uses the API"></textarea></label>
+    <label class="switch-field"><input type="checkbox" formControlName="isRequired"><span class="switch"></span><div><strong>Required dependency</strong><small>The application cannot operate correctly without this API release.</small></div></label>
     @if (modalError()) { <div class="inline-alert error">{{ modalError() }}</div> }
     <div class="modal-actions"><button class="button button-ghost" type="button" (click)="modalOpen.set(false)">Cancel</button><button class="button button-primary" type="submit" [disabled]="saving()">{{ saving() ? 'Linking…' : 'Link version' }}</button></div>
   </form>
