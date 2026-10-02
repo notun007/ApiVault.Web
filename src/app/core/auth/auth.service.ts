@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { tap } from 'rxjs';
 import { RuntimeConfigService } from '../config/runtime-config.service';
-import { AuthSession, LoginRequest, LoginResponse, UserRole } from '../models/security.models';
+import { AuthSession, ChangePasswordRequest, LoginRequest, LoginResponse, UserRole } from '../models/security.models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -30,6 +30,10 @@ export class AuthService {
         sessionStorage.setItem(this.storageKey(), JSON.stringify(session));
       })
     );
+  }
+
+  changePassword(request: ChangePasswordRequest) {
+    return this.http.put<void>(this.runtime.apiUrl('/api/auth/password'), request);
   }
 
   logout(): void {

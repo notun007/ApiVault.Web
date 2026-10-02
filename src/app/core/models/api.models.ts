@@ -40,16 +40,27 @@ export interface LookupResponse {
   name: string;
 }
 
-export interface ApiProjectResponse extends LookupResponse {
-  description?: string | null;
-  isActive: boolean;
-  apiCount: number;
-}
-
-export interface CreateApiProjectRequest {
+export interface VendorResponse {
+  id: string;
   code: string;
   name: string;
   description?: string | null;
+  contactPerson?: string | null;
+  supportEmail?: string | null;
+  supportPhone?: string | null;
+  websiteUrl?: string | null;
+  isActive: boolean;
+  systemCount: number;
+}
+
+export interface SaveVendorRequest {
+  code: string;
+  name: string;
+  description?: string | null;
+  contactPerson?: string | null;
+  supportEmail?: string | null;
+  supportPhone?: string | null;
+  websiteUrl?: string | null;
   isActive: boolean;
 }
 
@@ -68,30 +79,24 @@ export interface ApiSearchQuery {
   lifecycleStatus?: ApiLifecycleStatus | '';
   businessAreaId?: string;
   developmentTeamId?: string;
-  apiProjectId?: string;
+  publishingApplicationId?: string;
   page?: number;
   pageSize?: number;
 }
 
 export interface CreateApiRequest {
   name: string;
-  apiProjectId: string;
+  publishingApplicationId: string;
   description?: string | null;
-  ownershipType: ApiOwnershipType;
   protocol: ApiProtocol;
-  creatorName: string;
-  creatorEmail?: string | null;
-  vendorName?: string | null;
   externalReferenceUrl?: string | null;
-  businessAreaId: string;
-  developmentTeamId: string;
 }
 
 export interface ApiSummaryResponse {
   id: string;
   name: string;
-  apiProjectId: string;
-  apiProject: LookupResponse;
+  publishingApplicationId: string;
+  publishingApplication: LookupResponse;
   ownershipType: ApiOwnershipType;
   protocol: ApiProtocol;
   businessArea: string;
@@ -104,8 +109,8 @@ export interface ApiSummaryResponse {
 export interface ApiDetailResponse {
   id: string;
   name: string;
-  apiProjectId: string;
-  apiProject: LookupResponse;
+  publishingApplicationId: string;
+  publishingApplication: LookupResponse;
   description?: string | null;
   ownershipType: ApiOwnershipType;
   protocol: ApiProtocol;

@@ -1,4 +1,4 @@
-import { ApiLifecycleStatus } from './api.models';
+import { ApiLifecycleStatus, ApiOwnershipType } from './api.models';
 
 export enum ProjectStatus {
   Active = 'Active',
@@ -21,6 +21,8 @@ export interface CreateProjectRequest {
   status: ProjectStatus;
   businessAreaId: string;
   ownerTeamId: string;
+  ownershipType: ApiOwnershipType;
+  vendorId?: string | null;
 }
 
 export interface LinkProjectApiVersionRequest {
@@ -33,11 +35,20 @@ export interface ProjectSummaryResponse {
   id: string;
   code: string;
   name: string;
+  description?: string | null;
   criticality: ProjectCriticality;
   status: ProjectStatus;
   businessArea: string;
   ownerTeam: string;
+  businessAreaId?: string | null;
+  ownerTeamId?: string | null;
+  ownershipType: ApiOwnershipType;
+  vendorId?: string | null;
+  vendorName?: string | null;
   linkedApiVersionCount: number;
+  publishedApiCount: number;
+  publishesApis: boolean;
+  consumesApis: boolean;
 }
 
 export interface ProjectApiLinkResponse {
@@ -52,6 +63,12 @@ export interface ProjectApiLinkResponse {
 }
 
 export interface ProjectDetailResponse extends ProjectSummaryResponse {
-  description?: string | null;
   apiVersions: ProjectApiLinkResponse[];
+  publishedApis: ApplicationPublishedApiResponse[];
+}
+
+export interface ApplicationPublishedApiResponse {
+  apiId: string;
+  apiName: string;
+  versionCount: number;
 }

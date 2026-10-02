@@ -67,16 +67,22 @@ export const routes: Routes = [
         loadComponent: () => import('./features/administration/reference-data.component').then((m) => m.ReferenceDataComponent)
       },
       {
-        path: 'admin/api-projects',
-        canActivate: [roleGuard],
-        data: { roles: [UserRole.Admin, UserRole.ApiOwner] },
-        loadComponent: () => import('./features/administration/api-projects.component').then((m) => m.ApiProjectsComponent)
-      },
-      {
         path: 'admin/users',
         canActivate: [roleGuard],
         data: { roles: [UserRole.Admin] },
         loadComponent: () => import('./features/administration/users.component').then((m) => m.UsersComponent)
+      },
+      {
+        path: 'admin/vendors',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.SuperAdmin, UserRole.Admin] },
+        loadComponent: () => import('./features/administration/vendors.component').then((m) => m.VendorsComponent)
+      },
+      {
+        path: 'admin/reset-password',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.SuperAdmin, UserRole.Admin] },
+        loadComponent: () => import('./features/administration/reset-password.component').then((m) => m.ResetPasswordComponent)
       },
       {
         path: 'admin/security/user-access',

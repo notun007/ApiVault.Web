@@ -22,7 +22,10 @@ Angular 22 requires Node.js `^22.22.3`, `^24.15.0`, or `^26.0.0` and TypeScript 
 - API catalog search, filters, paging, and lifecycle summaries
 - Internal and third-party API registration and editing
 - REST, SOAP, and Web Service classification
-- API creator, API project, business area, team, vendor, and external reference
+- Unified source-system and consumer-application registry
+- API creator, publishing system, business area, team, vendor company, and external reference
+- Vendor-company administration for third-party systems
+- Self-service password change and administrator/Super Administrator password reset
 - Multiple releases and current-version selection
 - Draft, Active, Deprecated, and Retired lifecycle management
 - Authentication guidance and JSON configuration
@@ -47,6 +50,7 @@ The frontend calls every controller route included in the generated backend:
 
 ```text
 POST   /api/auth/login
+PUT    /api/auth/password
 GET    /api/apis
 GET    /api/apis/{id}
 POST   /api/apis
@@ -64,7 +68,11 @@ GET    /api/catalog-documents/{apiVersionId}/openapi.json
 GET    /api/projects
 GET    /api/projects/{id}
 POST   /api/projects
+PUT    /api/projects/{id}
 POST   /api/projects/{projectId}/api-versions
+GET    /api/vendors
+POST   /api/vendors
+PUT    /api/vendors/{id}
 POST   /api/api-tests/execute
 GET    /api/api-tests/history
 GET    /api/reference-data/business-areas
@@ -73,6 +81,7 @@ POST   /api/reference-data/business-areas
 POST   /api/reference-data/development-teams
 GET    /api/users
 POST   /api/users
+PUT    /api/users/{userId}/password
 GET    /api/audit-logs
 ```
 
@@ -152,7 +161,7 @@ For a bank production rollout, recommended future backend enhancements include:
 - Integration with the bank identity provider using OIDC/OAuth2
 - Short-lived access tokens and secure refresh-token rotation
 - Multi-factor authentication
-- Account disable/update and password-reset endpoints
+- Account disable/update endpoints
 - Server-side session revocation
 
 ## Scalar behavior
