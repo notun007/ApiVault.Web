@@ -3,19 +3,27 @@
 </app-page-header>
 
 <section class="panel filter-panel">
-  <form class="filter-grid" [formGroup]="filters" (ngSubmit)="search(1)">
-    <label class="field search-field"><span>Search</span><input class="input" formControlName="search" placeholder="API name, application, or description"></label>
-    <label class="field"><span>Ownership</span><select class="select" formControlName="ownershipType"><option value="">All ownership</option>@for (value of ownershipTypes; track value) { <option [value]="value">{{ value | enumLabel }}</option> }</select></label>
-    <label class="field"><span>Protocol</span><select class="select" formControlName="protocol"><option value="">All protocols</option>@for (value of protocols; track value) { <option [value]="value">{{ value | enumLabel }}</option> }</select></label>
-    <label class="field"><span>Lifecycle</span><select class="select" formControlName="lifecycleStatus"><option value="">All statuses</option>@for (value of lifecycleStatuses; track value) { <option [value]="value">{{ value | enumLabel }}</option> }</select></label>
-    <label class="field"><span>Team</span><select class="select" formControlName="developmentTeamId"><option value="">All teams</option>@for (item of teams(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select></label>
-    <label class="field"><span>Publishing application</span><select class="select" formControlName="publishingApplicationId"><option value="">All applications</option>@for (item of applications(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select></label>
-    <div class="filter-actions"><button class="button button-primary" type="submit">Apply filters</button><button class="button button-ghost" type="button" (click)="reset()">Reset</button></div>
-  </form>
+  <header class="filter-panel-header">
+    <h2>Filters</h2>
+    <button class="filter-toggle" type="button" aria-controls="api-catalog-filters" [attr.aria-expanded]="filtersExpanded()" (click)="toggleFilters()">
+      {{ filtersExpanded() ? 'Hide filters' : 'Show filters' }}
+      <span class="filter-toggle-icon" aria-hidden="true">{{ filtersExpanded() ? '⌃' : '⌄' }}</span>
+    </button>
+  </header>
+  @if (filtersExpanded()) {
+    <form id="api-catalog-filters" class="filter-grid" [formGroup]="filters" (ngSubmit)="search(1)">
+      <label class="field search-field"><span>Search</span><input class="input" formControlName="search" placeholder="API name, application, or description"></label>
+      <label class="field"><span>Ownership</span><select class="select" formControlName="ownershipType"><option value="">All ownership</option>@for (value of ownershipTypes; track value) { <option [value]="value">{{ value | enumLabel }}</option> }</select></label>
+      <label class="field"><span>Protocol</span><select class="select" formControlName="protocol"><option value="">All protocols</option>@for (value of protocols; track value) { <option [value]="value">{{ value | enumLabel }}</option> }</select></label>
+      <label class="field"><span>Lifecycle</span><select class="select" formControlName="lifecycleStatus"><option value="">All statuses</option>@for (value of lifecycleStatuses; track value) { <option [value]="value">{{ value | enumLabel }}</option> }</select></label>
+      <label class="field"><span>Team</span><select class="select" formControlName="developmentTeamId"><option value="">All teams</option>@for (item of teams(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select></label>
+      <label class="field"><span>Publishing application</span><select class="select" formControlName="publishingApplicationId"><option value="">All applications</option>@for (item of applications(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select></label>
+      <div class="filter-actions"><button class="button button-primary" type="submit">Apply filters</button><button class="button button-ghost" type="button" (click)="reset()">Reset</button></div>
+    </form>
+  }
 </section>
 
-<section class="panel">
-  <header class="panel-header table-header"><div><h2>Registered APIs</h2><p>{{ result().totalCount }} records found</p></div></header>
+<section class="panel api-grid-panel">
   @if (loading()) {
     <div class="table-loading">Loading API catalog…</div>
   } @else if (result().items.length === 0) {
@@ -40,8 +48,23 @@
               <td>{{ api.protocol | enumLabel }}</td>
               <td><strong class="cell-strong">{{ api.businessArea }}</strong></td>
               <td><strong class="cell-strong">{{ api.currentVersion || 'Not released' }}</strong></td>
-              <td>{{ api.versionCount }}</td>
-              <td class="actions-cell"><a class="button button-ghost button-small" [routerLink]="['/apis', api.id]">Open</a></td>
+              <td>
+                @if (api.versionCount > 1) {
+                  <a class="version-compare-link" [routerLink]="['/apis', api.id, 'compare']" [attr.aria-label]="'Compare ' + api.versionCount + ' versions of ' + api.name">
+                    <strong>{{ api.versionCount }}</strong><span>Compare</span>
+                  </a>
+                } @else {
+                  {{ api.versionCount }}
+                }
+              </td>
+              <td class="actions-cell">
+                <div class="grid-actions">
+                  @if (api.versionCount > 1) {
+                    <a class="button button-secondary button-small" [routerLink]="['/apis', api.id, 'compare']">Compare versions</a>
+                  }
+                  <a class="button button-ghost button-small" [routerLink]="['/apis', api.id]">Open</a>
+                </div>
+              </td>
             </tr>
           }
         </tbody>

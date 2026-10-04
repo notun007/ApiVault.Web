@@ -35,6 +35,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/apis/api-form.component').then((m) => m.ApiFormComponent)
       },
       {
+        path: 'apis/:id/compare',
+        loadComponent: () => import('./features/apis/api-version-compare.component').then((m) => m.ApiVersionCompareComponent)
+      },
+      {
         path: 'apis/:id',
         loadComponent: () => import('./features/apis/api-detail.component').then((m) => m.ApiDetailComponent)
       },

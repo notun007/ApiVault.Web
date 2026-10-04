@@ -1,0 +1,154 @@
+<a class="back-link" routerLink="/apis">← Back to API catalog</a>
+
+@if (loading()) {
+  <section class="panel compare-state">Loading version comparison…</section>
+} @else if (loadFailed()) {
+  <section class="panel compare-state">
+    <h2>Unable to load this API</h2>
+    <p>The version comparison could not be prepared. Try again or return to the catalog.</p>
+    <a class="button button-ghost" routerLink="/apis">Return to API catalog</a>
+  </section>
+} @else if (api(); as apiDetail) {
+  <header class="compare-page-header">
+    <div>
+      <span class="eyebrow">API governance</span>
+      <h1>Compare API versions</h1>
+      <p>Review release, security, endpoint, environment, and consumer changes side by side.</p>
+    </div>
+    <a class="button button-ghost" [routerLink]="['/apis', apiDetail.id]">Open API details</a>
+  </header>
+
+  <section class="panel identity-panel">
+    <div class="api-identity">
+      <div class="identity-mark">API</div>
+      <div>
+        <div class="identity-title">
+          <h2>{{ apiDetail.name }}</h2>
+          <span class="badge">{{ apiDetail.ownershipType }}</span>
+        </div>
+        <p>{{ apiDetail.description || 'No API description has been provided.' }}</p>
+      </div>
+    </div>
+    <dl class="identity-facts">
+      <div><dt>Business area</dt><dd>{{ apiDetail.businessArea.name }}</dd></div>
+      <div><dt>Protocol</dt><dd>{{ apiDetail.protocol }}</dd></div>
+      <div><dt>Versions</dt><dd>{{ apiDetail.versions.length }}</dd></div>
+    </dl>
+  </section>
+
+  @if (apiDetail.versions.length < 2) {
+    <section class="panel compare-state">
+      <div class="state-symbol">1</div>
+      <h2>Another version is needed</h2>
+      <p>This API currently has one release. Add another version before starting a comparison.</p>
+      <a class="button button-primary" [routerLink]="['/apis', apiDetail.id]">Open API details</a>
+    </section>
+  } @else {
+    <section class="panel compare-controls" aria-label="Version comparison controls">
+      <div class="selection-heading">
+        <div>
+          <h2>Select releases</h2>
+          <p>Compare two to four versions. Each column updates immediately.</p>
+        </div>
+        <div class="mode-switch" aria-label="Comparison display mode">
+          <button type="button" [class.active]="!differencesOnly()" (click)="setDifferencesOnly(false)">All fields</button>
+          <button type="button" [class.active]="differencesOnly()" (click)="setDifferencesOnly(true)">Differences only</button>
+        </div>
+      </div>
+
+      <div class="selection-row">
+        <div class="version-selectors">
+          @for (selectedId of selectedVersionIds(); track $index; let index = $index) {
+            <label class="version-selector">
+              <span>Version {{ index + 1 }}</span>
+              <div>
+                <select class="select" [value]="selectedId" (change)="setSelectedVersion(index, $event)">
+                  @for (version of orderedVersions(); track version.id) {
+                    <option [value]="version.id" [selected]="version.id === selectedId" [disabled]="isVersionSelected(version.id, index)">{{ version.version }}{{ version.isCurrent ? ' · Current' : '' }}</option>
+                  }
+                </select>
+                @if (selectedVersionIds().length > 2) {
+                  <button class="remove-version" type="button" [attr.aria-label]="'Remove version ' + (index + 1)" (click)="removeVersion(index)">×</button>
+                }
+              </div>
+            </label>
+          }
+        </div>
+        <div class="selection-actions">
+          <button class="button button-ghost button-small" type="button" (click)="reverseVersions()">⇄ Reverse order</button>
+          <button class="button button-secondary button-small" type="button" [disabled]="!canAddVersion()" (click)="addVersion()">+ Add version</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="summary-strip" aria-label="Comparison summary">
+      <article><span class="summary-dot changed"></span><div><strong>{{ summary().differences }}</strong><span>Changed fields</span></div></article>
+      <article><span class="summary-dot added"></span><div><strong>{{ summary().added }}</strong><span>Added values</span></div></article>
+      <article><span class="summary-dot missing"></span><div><strong>{{ summary().missing }}</strong><span>Missing values</span></div></article>
+      <article><span class="summary-dot same"></span><div><strong>{{ summary().unchanged }}</strong><span>Unchanged fields</span></div></article>
+    </section>
+
+    <section class="panel comparison-panel">
+      <header class="comparison-heading">
+        <div>
+          <h2>Version comparison</h2>
+          <p>Highlights show changed, added, and missing values across selected releases.</p>
+        </div>
+        <div class="comparison-legend" aria-label="Comparison color legend">
+          <span><i class="added"></i> Added</span>
+          <span><i class="changed"></i> Changed</span>
+          <span><i class="missing"></i> Missing</span>
+        </div>
+      </header>
+
+      @if (sections().length === 0) {
+        <div class="no-differences">
+          <strong>No differences found</strong>
+          <span>The selected releases have the same values in all compared fields.</span>
+        </div>
+      } @else {
+        <div class="comparison-wrap">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th scope="col">Property</th>
+                @for (version of selectedVersions(); track version.id) {
+                  <th scope="col">
+                    <div class="version-column-title">
+                      <span>{{ version.version }}</span>
+                      @if (version.isCurrent) { <span class="current-chip">Current</span> }
+                    </div>
+                    <small>{{ version.releaseName || 'Unnamed release' }}</small>
+                  </th>
+                }
+                <th class="difference-heading" scope="col">Difference</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (section of sections(); track section.title) {
+                <tr class="comparison-group"><th [attr.colspan]="selectedVersions().length + 2" scope="colgroup">{{ section.title }}</th></tr>
+                @for (row of section.rows; track row.label) {
+                  <tr>
+                    <th scope="row">{{ row.label }}</th>
+                    @for (value of row.values; track $index; let index = $index) {
+                      <td [class]="'tone-' + row.tones[index]">
+                        @if (row.different) { <span class="tone-mark" aria-hidden="true">{{ toneSymbol(row.tones[index]) }}</span> }
+                        <span>{{ value }}</span>
+                      </td>
+                    }
+                    <td [class]="'difference-cell difference-' + row.differenceTone">
+                      @if (row.differenceLabel) {
+                        <span class="difference-icon" aria-hidden="true">{{ toneSymbol(row.differenceTone) }}</span>
+                        <strong>{{ row.differenceLabel }}</strong>
+                      }
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+}

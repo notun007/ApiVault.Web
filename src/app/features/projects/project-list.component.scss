@@ -1,27 +1,64 @@
+.application-grid-panel {
+  min-width: 0;
+  overflow: hidden;
+  padding-top: 0;
+}
+
 .application-table-wrap {
-  margin-top: 2px;
+  margin-top: 0;
 }
 
-.application-grid-header {
-  align-items: flex-end;
+.sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
 }
 
-.grid-sort-controls {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-.compact-sort {
-  width: 180px;
+.sort-button:hover,
+.sort-button:focus-visible,
+th[aria-sort='ascending'] .sort-button,
+th[aria-sort='descending'] .sort-button {
+  color: var(--brand-700);
 }
 
-.sort-direction {
-  min-width: 112px;
+.sort-button:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 4px;
+  border-radius: 3px;
+}
+
+.sort-indicator {
+  min-width: 10px;
+  font-size: 12px;
+  line-height: 1;
 }
 
 .application-table {
   min-width: 820px;
+}
+
+.application-table th,
+.application-table td {
+  white-space: nowrap;
 }
 
 .application-table tbody tr {
@@ -61,17 +98,6 @@
 }
 
 @media (max-width: 640px) {
-  .application-grid-header,
-  .grid-sort-controls {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .compact-sort,
-  .sort-direction {
-    width: 100%;
-  }
-
   .application-table {
     min-width: 760px;
   }

@@ -160,9 +160,19 @@ export interface ApiVersionResponse {
   maxResponseBytes: number;
   timeoutSeconds: number;
   isCurrent: boolean;
+  consumers: ApiVersionConsumerResponse[];
   endpoints: EndpointResponse[];
   environments: EnvironmentResponse[];
   openApiDocumentUrl: string;
+}
+
+export interface ApiVersionConsumerResponse {
+  linkId: string;
+  projectId: string;
+  projectCode: string;
+  projectName: string;
+  purpose?: string | null;
+  isRequired: boolean;
 }
 
 export interface CreateEndpointRequest {

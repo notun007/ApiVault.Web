@@ -1,5 +1,75 @@
-/*
- * Component stylesheet.
- * Shared ApiVault design-system rules remain in src/styles.scss so the
- * regenerated project keeps the exact existing layout and behavior.
- */
+.consumer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.comparison-entry {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.comparison-unavailable {
+  margin-top: 12px;
+  padding: 10px 11px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 9px;
+  background: var(--surface-soft);
+}
+
+.comparison-unavailable strong,
+.comparison-unavailable span {
+  display: block;
+}
+
+.comparison-unavailable strong {
+  font-size: 10px;
+}
+
+.comparison-unavailable span {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.consumer-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fcfdfd;
+}
+
+.consumer-card header,
+.consumer-card footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.consumer-card h3,
+.consumer-card p {
+  margin: 0;
+}
+
+.consumer-card p {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.consumer-required {
+  color: var(--brand-700);
+  background: var(--brand-100);
+}
+
+.consumer-optional {
+  color: var(--muted);
+  background: var(--surface-soft);
+}
+
+@media (max-width: 760px) {
+  .consumer-grid { grid-template-columns: 1fr; }
+}

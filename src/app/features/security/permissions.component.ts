@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
 import { readProblem } from '../../core/http/error.interceptor';
 import { PermissionResponse, RoleResponse, SecurityScreenResponse } from '../../core/models/security.models';
@@ -24,9 +24,35 @@ export class PermissionsComponent {
   readonly permissions = signal<PermissionResponse[]>([]);
   readonly selectedRoleId = signal('');
   readonly assignments = signal<Record<string, string[]>>({});
+  readonly page = signal(1);
+  readonly pageSize = signal(10);
+  readonly sortBy = signal('screen');
+  readonly sortDescending = signal(false);
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly errorMessage = signal('');
+  readonly totalPages = computed(() => Math.ceil(this.screens().length / this.pageSize()));
+  readonly sortedScreens = computed(() => [...this.screens()].sort((left, right) => {
+    const field = this.sortBy();
+    let comparison: number;
+    if (field === 'route') {
+      comparison = left.route.localeCompare(right.route);
+    } else if (field.startsWith('permission:')) {
+      const permissionId = field.slice('permission:'.length);
+      comparison = Number(this.isSelected(left.id, permissionId)) - Number(this.isSelected(right.id, permissionId));
+    } else {
+      comparison = left.name.localeCompare(right.name);
+    }
+
+    if (comparison === 0) comparison = left.name.localeCompare(right.name);
+    return this.sortDescending() ? -comparison : comparison;
+  }));
+  readonly visibleScreens = computed(() => {
+    const start = (this.page() - 1) * this.pageSize();
+    return this.sortedScreens().slice(start, start + this.pageSize());
+  });
+  readonly firstVisibleRecord = computed(() => this.screens().length === 0 ? 0 : ((this.page() - 1) * this.pageSize()) + 1);
+  readonly lastVisibleRecord = computed(() => Math.min(this.page() * this.pageSize(), this.screens().length));
 
   constructor() {
     forkJoin({ roles: this.client.getRoles(), screens: this.client.getScreens(), permissions: this.client.getPermissions() }).subscribe({
@@ -50,7 +76,36 @@ export class PermissionsComponent {
   selectRole(event: Event): void {
     const roleId = (event.target as HTMLSelectElement).value;
     this.selectedRoleId.set(roleId);
+    this.page.set(1);
     this.loadAssignments(roleId);
+  }
+
+  changePage(page: number): void {
+    this.page.set(Math.min(Math.max(1, page), Math.max(1, this.totalPages())));
+  }
+
+  changePageSize(event: Event): void {
+    this.pageSize.set(Number((event.target as HTMLSelectElement).value));
+    this.page.set(1);
+  }
+
+  changeSort(field: string): void {
+    if (this.sortBy() === field) {
+      this.sortDescending.update((descending) => !descending);
+    } else {
+      this.sortBy.set(field);
+      this.sortDescending.set(false);
+    }
+    this.page.set(1);
+  }
+
+  sortAria(field: string): 'ascending' | 'descending' | 'none' {
+    if (this.sortBy() !== field) return 'none';
+    return this.sortDescending() ? 'descending' : 'ascending';
+  }
+
+  permissionSortKey(permissionId: string): string {
+    return `permission:${permissionId}`;
   }
 
   isSelected(screenId: string, permissionId: string): boolean {

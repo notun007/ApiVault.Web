@@ -15,7 +15,7 @@ import { ModalComponent } from '../../shared/components/modal.component';
 import { PageHeaderComponent } from '../../shared/components/page-header.component';
 import { EnumLabelPipe } from '../../shared/pipes/enum-label.pipe';
 
-type ApplicationSortField = 'name' | 'businessArea' | 'ownershipType' | 'criticality';
+type ApplicationSortField = 'name' | 'businessArea' | 'ownershipType' | 'apiRole' | 'criticality';
 
 @Component({
   selector: 'app-project-list',
@@ -168,14 +168,19 @@ export class ProjectListComponent {
   updateStatusFilter(value: string): void { this.statusFilter.set(value); this.currentPage.set(1); }
   updateOwnershipFilter(value: string): void { this.ownershipFilter.set(value); this.currentPage.set(1); }
 
-  updateSortField(value: string): void {
-    this.sortField.set(value as ApplicationSortField);
+  changeSort(field: ApplicationSortField): void {
+    if (this.sortField() === field) {
+      this.sortDirection.update((direction) => direction === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortField.set(field);
+      this.sortDirection.set('asc');
+    }
     this.currentPage.set(1);
   }
 
-  toggleSortDirection(): void {
-    this.sortDirection.update((direction) => direction === 'asc' ? 'desc' : 'asc');
-    this.currentPage.set(1);
+  sortAria(field: ApplicationSortField): 'ascending' | 'descending' | 'none' {
+    if (this.sortField() !== field) return 'none';
+    return this.sortDirection() === 'desc' ? 'descending' : 'ascending';
   }
 
   changePageSize(value: string): void {
@@ -190,6 +195,7 @@ export class ProjectListComponent {
     if (field === 'criticality') {
       return { Low: 1, Medium: 2, High: 3, Critical: 4 }[application.criticality];
     }
+    if (field === 'apiRole') return this.roleLabel(application);
     return application[field] ?? '';
   }
 
@@ -200,7 +206,4 @@ export class ProjectListComponent {
     return 'No API relationships';
   }
 
-  publisherCount(): number { return this.applications().filter((item) => item.publishesApis).length; }
-  consumerCount(): number { return this.applications().filter((item) => item.consumesApis).length; }
-  thirdPartyCount(): number { return this.applications().filter((item) => item.ownershipType === ApiOwnershipType.ThirdParty).length; }
 }

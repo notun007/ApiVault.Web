@@ -41,6 +41,7 @@ export class ApiListComponent {
   readonly teams = signal<LookupResponse[]>([]);
   readonly applications = signal<ProjectSummaryResponse[]>([]);
   readonly loading = signal(true);
+  readonly filtersExpanded = signal(false);
   readonly result = signal<PagedResult<ApiSummaryResponse>>({ items: [], page: 1, pageSize: 25, totalCount: 0, totalPages: 0 });
   readonly sortBy = signal<ApiCatalogSortField>('Name');
   readonly sortDescending = signal(false);
@@ -88,6 +89,10 @@ export class ApiListComponent {
   reset(): void {
     this.filters.reset();
     this.search(1);
+  }
+
+  toggleFilters(): void {
+    this.filtersExpanded.update((expanded) => !expanded);
   }
 
   changePageSize(event: Event): void {

@@ -4,4 +4,15 @@
 .permission-cell { text-align: center; }
 .permission-cell input { width: 1.1rem; height: 1.1rem; accent-color: var(--teal); }
 .permission-table code { white-space: nowrap; }
-@media (max-width: 760px) { .permission-toolbar { grid-template-columns: 1fr; } .permission-table { min-width: 48rem; } }
+.sort-button { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; color: inherit; background: transparent; font: inherit; font-weight: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; }
+.sort-button:hover, .sort-button:focus-visible, th[aria-sort='ascending'] .sort-button, th[aria-sort='descending'] .sort-button { color: var(--brand-700); }
+.sort-button:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 4px; border-radius: 3px; }
+.sort-indicator { min-width: 10px; font-size: 12px; line-height: 1; }
+.pagination-controls { display: flex; align-items: center; gap: 7px; }
+.permissions-pagination { margin-top: 0; }
+@media (max-width: 760px) {
+  .permission-toolbar { grid-template-columns: 1fr; }
+  .permission-table { min-width: 48rem; }
+  .pagination { align-items: flex-start; flex-direction: column; }
+  .pagination-controls { width: 100%; overflow-x: auto; }
+}

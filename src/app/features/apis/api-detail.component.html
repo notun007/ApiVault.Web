@@ -3,6 +3,7 @@
 } @else if (api(); as item) {
   <app-page-header [title]="item.name" [eyebrow]="item.publishingApplication.name" [description]="item.description || 'No description has been provided for this API.'">
     <a class="button button-ghost" routerLink="/apis">← Catalog</a>
+    <a class="button button-secondary" [routerLink]="['/apis', item.id, 'compare']">Compare versions</a>
     @if (canManage()) { <a class="button button-ghost" [routerLink]="['/apis', item.id, 'edit']">Edit API</a><button class="button button-primary" type="button" (click)="openCreateVersion()">+ Add release</button> }
   </app-page-header>
 
@@ -20,6 +21,14 @@
   <section class="version-workspace">
     <aside class="version-sidebar panel">
       <header><span class="eyebrow">Release registry</span><h2>Versions</h2><p>{{ item.versions.length }} registered</p></header>
+      @if (item.versions.length > 1) {
+        <a class="button button-secondary button-small comparison-entry" [routerLink]="['/apis', item.id, 'compare']">Compare {{ item.versions.length }} versions</a>
+      } @else {
+        <div class="comparison-unavailable">
+          <strong>Comparison needs two releases</strong>
+          <span>Add another API release to enable side-by-side comparison.</span>
+        </div>
+      }
       <div class="version-list">
         @for (version of sortedVersions(); track version.id) {
           <button type="button" [class.active]="selectedVersionId() === version.id" (click)="selectedVersionId.set(version.id)">
@@ -55,6 +64,26 @@
             <div class="lifecycle-control">
               <label class="field inline-field"><span>Move lifecycle forward</span><select class="select" [value]="version.lifecycleStatus" #lifecycleSelect>@for (status of lifecycleStatuses; track status) { <option [value]="status" [disabled]="lifecycleOrder(status) < lifecycleOrder(version.lifecycleStatus)">{{ status }}</option> }</select></label>
               <button class="button button-secondary" type="button" [disabled]="lifecycleSelect.value === version.lifecycleStatus" (click)="changeLifecycle(version, lifecycleSelect.value)">Update lifecycle</button>
+            </div>
+          }
+        </section>
+
+        <section class="panel">
+          <header class="panel-header"><div><span class="eyebrow">Release usage</span><h2>Consuming applications</h2><p>Applications and systems linked to this exact API release.</p></div><span class="count-pill large">{{ version.consumers.length }}</span></header>
+          @if (version.consumers.length === 0) {
+            <app-empty-state symbol="CA" title="No consuming applications" message="No application has linked this exact release as a dependency."></app-empty-state>
+          } @else {
+            <div class="consumer-grid">
+              @for (consumer of version.consumers; track consumer.linkId) {
+                <article class="consumer-card">
+                  <header>
+                    <div><span class="eyebrow">{{ consumer.projectCode }}</span><h3>{{ consumer.projectName }}</h3></div>
+                    <span class="badge" [class]="consumer.isRequired ? 'badge consumer-required' : 'badge consumer-optional'">{{ consumer.isRequired ? 'Required' : 'Optional' }}</span>
+                  </header>
+                  <p>{{ consumer.purpose || 'No usage purpose has been recorded.' }}</p>
+                  <footer><a class="button button-ghost button-small" [routerLink]="['/projects', consumer.projectId]">Open application</a></footer>
+                </article>
+              }
             </div>
           }
         </section>

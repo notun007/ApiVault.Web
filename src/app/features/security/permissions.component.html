@@ -16,9 +16,15 @@
     <app-empty-state symbol="PM" title="No security metadata found" message="Create screens and permissions in the backend before assigning access."></app-empty-state>
   } @else {
     <div class="table-wrap"><table class="permission-table">
-      <thead><tr><th>Screen</th><th>Route</th>@for (permission of permissions(); track permission.id) { <th>{{ permission.name }}</th> }</tr></thead>
+      <thead><tr>
+        <th [attr.aria-sort]="sortAria('screen')"><button class="sort-button" type="button" (click)="changeSort('screen')">Screen <span class="sort-indicator">{{ sortBy() === 'screen' ? (sortDescending() ? '↓' : '↑') : '↕' }}</span></button></th>
+        <th [attr.aria-sort]="sortAria('route')"><button class="sort-button" type="button" (click)="changeSort('route')">Route <span class="sort-indicator">{{ sortBy() === 'route' ? (sortDescending() ? '↓' : '↑') : '↕' }}</span></button></th>
+        @for (permission of permissions(); track permission.id) {
+          <th [attr.aria-sort]="sortAria(permissionSortKey(permission.id))"><button class="sort-button" type="button" (click)="changeSort(permissionSortKey(permission.id))">{{ permission.name }} <span class="sort-indicator">{{ sortBy() === permissionSortKey(permission.id) ? (sortDescending() ? '↓' : '↑') : '↕' }}</span></button></th>
+        }
+      </tr></thead>
       <tbody>
-        @for (screen of screens(); track screen.id) {
+        @for (screen of visibleScreens(); track screen.id) {
           <tr>
             <td><strong class="cell-strong">{{ screen.name }}</strong><small>{{ screen.code }}</small></td>
             <td><code>{{ screen.route }}</code></td>
@@ -29,5 +35,14 @@
         }
       </tbody>
     </table></div>
+    <footer class="pagination permissions-pagination">
+      <span>Showing {{ firstVisibleRecord() }}–{{ lastVisibleRecord() }} of {{ screens().length }}</span>
+      <nav class="pagination-controls" aria-label="Role permissions pagination">
+        <label class="page-size">Rows <select class="select compact" [value]="pageSize()" (change)="changePageSize($event)"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></label>
+        <span>Page {{ page() }} of {{ totalPages() || 1 }}</span>
+        <button class="button button-ghost button-small" type="button" [disabled]="page() <= 1" (click)="changePage(page() - 1)">Previous</button>
+        <button class="button button-ghost button-small" type="button" [disabled]="page() >= totalPages()" (click)="changePage(page() + 1)">Next</button>
+      </nav>
+    </footer>
   }
 </section>

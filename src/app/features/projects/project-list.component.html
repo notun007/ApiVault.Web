@@ -2,34 +2,27 @@
   @if (canManage()) { <button class="button button-primary" type="button" (click)="openCreate()">+ Register application</button> }
 </app-page-header>
 
-<section class="project-summary-grid">
-  <article><span>Total applications</span><strong>{{ applications().length }}</strong></article>
-  <article><span>API publishers</span><strong>{{ publisherCount() }}</strong></article>
-  <article><span>API consumers</span><strong>{{ consumerCount() }}</strong></article>
-  <article><span>Third-party systems</span><strong>{{ thirdPartyCount() }}</strong></article>
-</section>
-
 <section class="panel filter-panel compact-filter">
   <label class="field"><span>Find application</span><input class="input" [value]="searchText()" (input)="updateSearch($any($event.target).value)" placeholder="Search name, code, business, team, or vendor"></label>
   <label class="field"><span>Status</span><select class="select" [value]="statusFilter()" (change)="updateStatusFilter($any($event.target).value)"><option value="">All statuses</option>@for (status of statuses; track status) { <option [value]="status">{{ status | enumLabel }}</option> }</select></label>
   <label class="field"><span>Ownership</span><select class="select" [value]="ownershipFilter()" (change)="updateOwnershipFilter($any($event.target).value)"><option value="">All ownership</option>@for (type of ownershipTypes; track type) { <option [value]="type">{{ type === 'ThirdParty' ? 'Third Party' : 'Internal' }}</option> }</select></label>
 </section>
 
-<section class="panel">
-  <header class="panel-header application-grid-header">
-    <div><h2>Registered applications and systems</h2><p>{{ filteredApplications().length }} visible records</p></div>
-    <div class="grid-sort-controls">
-      <label class="field"><span>Sort by</span><select class="select compact-sort" [value]="sortField()" (change)="updateSortField($any($event.target).value)"><option value="name">Application name</option><option value="businessArea">Business area</option><option value="ownershipType">Ownership</option><option value="criticality">Criticality</option></select></label>
-      <button class="button button-ghost sort-direction" type="button" (click)="toggleSortDirection()">{{ sortDirection() === 'asc' ? '↑ Ascending' : '↓ Descending' }}</button>
-    </div>
-  </header>
+<section class="panel application-grid-panel">
   @if (loading()) { <div class="table-loading">Loading applications…</div> }
   @else if (filteredApplications().length === 0) { <app-empty-state symbol="AS" title="No applications found" message="Register an application or change the filters."></app-empty-state> }
   @else {
     <div class="table-wrap application-table-wrap">
       <table class="application-table">
         <thead>
-          <tr><th>Application</th><th>Business ownership</th><th>Provider</th><th>API role</th><th>Criticality</th><th></th></tr>
+          <tr>
+            <th [attr.aria-sort]="sortAria('name')"><button class="sort-button" type="button" (click)="changeSort('name')">Application <span class="sort-indicator">{{ sortField() === 'name' ? (sortDirection() === 'desc' ? '↓' : '↑') : '↕' }}</span></button></th>
+            <th [attr.aria-sort]="sortAria('businessArea')"><button class="sort-button" type="button" (click)="changeSort('businessArea')">Business ownership <span class="sort-indicator">{{ sortField() === 'businessArea' ? (sortDirection() === 'desc' ? '↓' : '↑') : '↕' }}</span></button></th>
+            <th [attr.aria-sort]="sortAria('ownershipType')"><button class="sort-button" type="button" (click)="changeSort('ownershipType')">Provider <span class="sort-indicator">{{ sortField() === 'ownershipType' ? (sortDirection() === 'desc' ? '↓' : '↑') : '↕' }}</span></button></th>
+            <th [attr.aria-sort]="sortAria('apiRole')"><button class="sort-button" type="button" (click)="changeSort('apiRole')">API role <span class="sort-indicator">{{ sortField() === 'apiRole' ? (sortDirection() === 'desc' ? '↓' : '↑') : '↕' }}</span></button></th>
+            <th [attr.aria-sort]="sortAria('criticality')"><button class="sort-button" type="button" (click)="changeSort('criticality')">Criticality <span class="sort-indicator">{{ sortField() === 'criticality' ? (sortDirection() === 'desc' ? '↓' : '↑') : '↕' }}</span></button></th>
+            <th><span class="visually-hidden">Actions</span></th>
+          </tr>
         </thead>
         <tbody>
           @for (application of pagedApplications(); track application.id) {

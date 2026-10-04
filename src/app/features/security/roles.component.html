@@ -2,12 +2,6 @@
   <button class="button button-primary" type="button" (click)="openCreate()">+ Create role</button>
 </app-page-header>
 
-<section class="panel security-intro">
-  <span class="eyebrow">Access model</span>
-  <h2>Roles define responsibility</h2>
-  <p>Keep roles business-focused. Screen visibility and actions are assigned separately from user accounts.</p>
-</section>
-
 <section class="panel">
   <header class="panel-header"><div><h2>Application roles</h2><p>{{ roles().length }} roles</p></div></header>
   @if (loading()) {
@@ -16,9 +10,16 @@
     <app-empty-state symbol="RL" title="No roles found" message="Create the first security role to begin access administration."></app-empty-state>
   } @else {
     <div class="table-wrap"><table>
-      <thead><tr><th>Role</th><th>Code</th><th>Description</th><th>Users</th><th>Status</th><th></th></tr></thead>
+      <thead><tr>
+        <th [attr.aria-sort]="sortAria('Name')"><button class="sort-button" type="button" (click)="changeSort('Name')">Role <span class="sort-indicator">{{ sortBy() === 'Name' ? (sortDescending() ? '↓' : '↑') : '↕' }}</span></button></th>
+        <th [attr.aria-sort]="sortAria('Code')"><button class="sort-button" type="button" (click)="changeSort('Code')">Code <span class="sort-indicator">{{ sortBy() === 'Code' ? (sortDescending() ? '↓' : '↑') : '↕' }}</span></button></th>
+        <th [attr.aria-sort]="sortAria('Description')"><button class="sort-button" type="button" (click)="changeSort('Description')">Description <span class="sort-indicator">{{ sortBy() === 'Description' ? (sortDescending() ? '↓' : '↑') : '↕' }}</span></button></th>
+        <th [attr.aria-sort]="sortAria('Users')"><button class="sort-button" type="button" (click)="changeSort('Users')">Users <span class="sort-indicator">{{ sortBy() === 'Users' ? (sortDescending() ? '↓' : '↑') : '↕' }}</span></button></th>
+        <th [attr.aria-sort]="sortAria('Status')"><button class="sort-button" type="button" (click)="changeSort('Status')">Status <span class="sort-indicator">{{ sortBy() === 'Status' ? (sortDescending() ? '↓' : '↑') : '↕' }}</span></button></th>
+        <th><span class="visually-hidden">Actions</span></th>
+      </tr></thead>
       <tbody>
-        @for (role of roles(); track role.id) {
+        @for (role of visibleRoles(); track role.id) {
           <tr>
             <td><strong class="cell-strong">{{ role.name }}</strong>@if (role.isSystemRole) { <small>System role</small> }</td>
             <td><code>{{ role.code }}</code></td>
@@ -30,6 +31,15 @@
         }
       </tbody>
     </table></div>
+    <footer class="pagination roles-pagination">
+      <span>Showing {{ firstVisibleRecord() }}–{{ lastVisibleRecord() }} of {{ roles().length }}</span>
+      <nav class="pagination-controls" aria-label="Application roles pagination">
+        <label class="page-size">Rows <select class="select compact" [value]="pageSize()" (change)="changePageSize($event)"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></label>
+        <span>Page {{ page() }} of {{ totalPages() || 1 }}</span>
+        <button class="button button-ghost button-small" type="button" [disabled]="page() <= 1" (click)="changePage(page() - 1)">Previous</button>
+        <button class="button button-ghost button-small" type="button" [disabled]="page() >= totalPages()" (click)="changePage(page() + 1)">Next</button>
+      </nav>
+    </footer>
   }
 </section>
 
