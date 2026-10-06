@@ -1,21 +1,47 @@
 :host {
   display: block;
-  margin-top: -20px;
+  margin-top: -24px;
 }
 
 .page-header {
+  position: relative;
   align-items: center;
-  margin-bottom: 14px;
+  gap: 18px;
+  min-height: 35px;
+  margin-bottom: 10px;
+}
+
+.page-header::after {
+  position: absolute;
+  right: 8%;
+  bottom: -10px;
+  left: 0;
+  height: 10px;
+  background: radial-gradient(
+    ellipse at 28% 0,
+    rgba(19, 113, 100, 0.14) 0,
+    rgba(19, 113, 100, 0.07) 34%,
+    rgba(94, 135, 128, 0.025) 58%,
+    rgba(94, 135, 128, 0) 78%
+  );
+  filter: blur(3px);
+  transform: translateY(1px);
+  content: '';
+  pointer-events: none;
 }
 
 .page-header h1 {
   margin: 0;
-  font-size: clamp(23px, 2.2vw, 30px);
+  font-size: clamp(22px, 2vw, 28px);
   line-height: 1.05;
 }
 
 @media (max-width: 880px) {
   :host {
-    margin-top: -11px;
+    margin-top: -15px;
+  }
+
+  .page-header::after {
+    opacity: 0.72;
   }
 }

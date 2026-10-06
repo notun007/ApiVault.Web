@@ -107,7 +107,7 @@ Edit `public/config/runtime-config.json`:
 
 ```json
 {
-  "apiBaseUrl": "https://localhost:44315",
+  "apiBaseUrl": "https://localhost:7185",
   "applicationName": "ApiVault",
   "organizationName": "Your Bank Name",
   "sessionStorageKey": "apivault.session"
@@ -115,6 +115,8 @@ Edit `public/config/runtime-config.json`:
 ```
 
 This file is loaded before application startup. It can be replaced during deployment without rebuilding the Angular bundles.
+
+For local Angular development, the tracked file points to the local HTTPS API. For container deployments, the Nginx startup script generates this file from environment variables, so one immutable image can be promoted through Development and Production.
 
 ## 3. Install and run
 
@@ -147,10 +149,35 @@ dist/ApiVault.Web/browser
 
 ```bash
 docker build -t apivault-web .
-docker run --rm -p 8080:8080 apivault-web
+docker run --rm -p 8080:8080 --env-file deploy/development.env apivault-web
 ```
 
-Before production deployment, replace `runtime-config.json` with the production ApiVault.Api HTTPS URL.
+Copy `deploy/development.env.example` to an ignored deployment-specific environment file and supply the correct API URL. For production, use the platform's configuration facility with the variables listed in `deploy/production.env.example`:
+
+```text
+APIVAULT_ENVIRONMENT=Production
+APIVAULT_API_BASE_URL=https://api.example.bank
+APIVAULT_APPLICATION_NAME=ApiVault
+APIVAULT_ORGANIZATION_NAME=Example Bank
+APIVAULT_SESSION_STORAGE_KEY=apivault.session
+```
+
+The container refuses to start without `APIVAULT_API_BASE_URL`, or when a non-HTTPS API URL is used outside Development. The generated `/config/runtime-config.json` remains non-cacheable.
+
+## 6. IIS
+
+Build the Angular application and copy the contents of `dist/ApiVault.Web/browser` to the IIS website physical path. The included `web.config` uses built-in IIS features and does not require the optional URL Rewrite module.
+
+Configure the deployed API URL after copying the files:
+
+```powershell
+.\deploy\Configure-IisEnvironment.ps1 `
+  -PublishPath 'C:\inetpub\wwwroot\ApiVault.Web' `
+  -ApiBaseUrl 'https://api.example.bank' `
+  -EnvironmentName Production
+```
+
+For local IIS testing, use `-EnvironmentName Development` with an HTTP API URL such as `http://localhost:8025`.
 
 ## Authentication storage
 

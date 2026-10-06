@@ -1,0 +1,6 @@
+{
+  "apiBaseUrl": "${APIVAULT_API_BASE_URL}",
+  "applicationName": "${APIVAULT_APPLICATION_NAME}",
+  "organizationName": "${APIVAULT_ORGANIZATION_NAME}",
+  "sessionStorageKey": "${APIVAULT_SESSION_STORAGE_KEY}"
+}
