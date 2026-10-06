@@ -1,12 +1,12 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { RuntimeConfigService } from '../config/runtime-config.service';
+import { AppConfigService } from '../config/app-config.service';
 import { ExecuteApiTestRequest, TestExecutionResponse } from '../models/test.models';
 
 @Injectable({ providedIn: 'root' })
 export class TestClient {
   private readonly http = inject(HttpClient);
-  private readonly runtime = inject(RuntimeConfigService);
+  private readonly runtime = inject(AppConfigService);
 
   execute(request: ExecuteApiTestRequest) {
     return this.http.post<TestExecutionResponse>(this.runtime.apiUrl('/api/api-tests/execute'), request);

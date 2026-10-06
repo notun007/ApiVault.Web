@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { RuntimeConfigService } from '../config/runtime-config.service';
+import { AppConfigService } from '../config/app-config.service';
 import {
   ApiDetailResponse,
   ApiSearchQuery,
@@ -21,7 +21,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class ApiCatalogClient {
   private readonly http = inject(HttpClient);
-  private readonly runtime = inject(RuntimeConfigService);
+  private readonly runtime = inject(AppConfigService);
 
   search(query: ApiSearchQuery = {}) {
     let params = new HttpParams();

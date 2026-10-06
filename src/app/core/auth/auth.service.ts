@@ -1,13 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { tap } from 'rxjs';
-import { RuntimeConfigService } from '../config/runtime-config.service';
+import { AppConfigService } from '../config/app-config.service';
 import { AuthSession, ChangePasswordRequest, LoginRequest, LoginResponse, UserRole } from '../models/security.models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
-  private readonly runtime = inject(RuntimeConfigService);
+  private readonly runtime = inject(AppConfigService);
   private readonly sessionState = signal<AuthSession | null>(null);
 
   readonly session = this.sessionState.asReadonly();

@@ -3,7 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
-import { RuntimeConfigService } from '../../core/config/runtime-config.service';
+import { AppConfigService } from '../../core/config/app-config.service';
 import { readProblem } from '../../core/http/error.interceptor';
 import { ToastService } from '../../core/services/toast.service';
 
@@ -20,7 +20,7 @@ export class LoginComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly toast = inject(ToastService);
-  readonly runtime = inject(RuntimeConfigService);
+  readonly runtime = inject(AppConfigService);
 
   readonly submitting = signal(false);
   readonly showPassword = signal(false);

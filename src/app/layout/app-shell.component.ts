@@ -3,7 +3,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../core/auth/auth.service';
-import { RuntimeConfigService } from '../core/config/runtime-config.service';
+import { AppConfigService } from '../core/config/app-config.service';
 import { readProblem } from '../core/http/error.interceptor';
 import { UserRole } from '../core/models/security.models';
 import { ToastService } from '../core/services/toast.service';
@@ -27,7 +27,7 @@ interface NavItem {
 })
 export class AppShellComponent {
   readonly auth = inject(AuthService);
-  readonly runtime = inject(RuntimeConfigService);
+  readonly runtime = inject(AppConfigService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(ToastService);

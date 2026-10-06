@@ -12,7 +12,6 @@ interface ProblemDetails {
 }
 
 export const errorInterceptor: HttpInterceptorFn = (request, next) => {
-  if (request.url.includes('/config/runtime-config.json')) return next(request);
   const auth = inject(AuthService);
   const router = inject(Router);
   const toast = inject(ToastService);
@@ -26,7 +25,7 @@ export const errorInterceptor: HttpInterceptorFn = (request, next) => {
       } else if (error.status === 403) {
         toast.error('Access denied', 'Your role does not permit this action.');
       } else if (error.status === 0) {
-        toast.error('API unavailable', 'ApiVault.Api could not be reached. Check the runtime configuration and CORS settings.');
+        toast.error('API unavailable', 'ApiVault.Api could not be reached. Check the API URL and CORS settings.');
       }
       return throwError(() => error);
     })

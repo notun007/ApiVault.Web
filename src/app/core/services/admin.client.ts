@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { RuntimeConfigService } from '../config/runtime-config.service';
+import { AppConfigService } from '../config/app-config.service';
 import { LookupResponse } from '../models/api.models';
 import { SaveVendorRequest, VendorResponse } from '../models/api.models';
 import { CreateLookupRequest, CreateUserRequest, ResetPasswordRequest, UpdateUserRolesRequest, UserAccessResponse, UserResponse } from '../models/security.models';
@@ -9,7 +9,7 @@ import { AuditLogResponse } from '../models/test.models';
 @Injectable({ providedIn: 'root' })
 export class AdminClient {
   private readonly http = inject(HttpClient);
-  private readonly runtime = inject(RuntimeConfigService);
+  private readonly runtime = inject(AppConfigService);
 
   getBusinessAreas() {
     return this.http.get<LookupResponse[]>(this.runtime.apiUrl('/api/reference-data/business-areas'));

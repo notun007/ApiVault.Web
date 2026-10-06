@@ -7,7 +7,7 @@ Responsive Angular frontend for the `ApiVault.Api` banking API repository and go
 - Angular 22 standalone application
 - Angular signals and zoneless change detection
 - Reactive Forms
-- Runtime API configuration
+- One source setting for the API URL
 - Self-hosted Scalar API Reference package
 - No external UI framework or icon dependency
 - Nginx and IIS SPA deployment samples
@@ -85,38 +85,35 @@ PUT    /api/users/{userId}/password
 GET    /api/audit-logs
 ```
 
-## 1. Configure ApiVault.Api CORS
+## 1. Set the API URL
 
-In `ApiVault.Api/appsettings.Development.json`, allow the Angular development origin:
+Edit `apiBaseUrl` in `src/app/core/config/app-config.service.ts` before
+building. Use the HTTPS URL that users' browsers can reach:
+
+```ts
+apiBaseUrl: 'https://api.example.bank',
+```
+
+This is the only Web setting needed for the API address. The same value is
+included in both the IIS files and Docker image when you build. Changing it
+later requires a new Web build.
+
+## 2. Configure ApiVault.Api CORS
+
+If Web and API use different origins, allow the exact Web origin in
+`ApiVault.Api/appsettings.json`:
 
 ```json
 {
   "Cors": {
-    "AllowedOrigins": [
-      "http://localhost:4200"
+    "Origins": [
+      "https://web.example.bank"
     ]
   }
 }
 ```
 
-For production, replace it with the exact HTTPS origin of ApiVault.Web. Do not use wildcard origins for this authenticated application.
-
-## 2. Runtime configuration
-
-Edit `public/config/runtime-config.json`:
-
-```json
-{
-  "apiBaseUrl": "https://localhost:7185",
-  "applicationName": "ApiVault",
-  "organizationName": "Your Bank Name",
-  "sessionStorageKey": "apivault.session"
-}
-```
-
-This file is loaded before application startup. It can be replaced during deployment without rebuilding the Angular bundles.
-
-For local Angular development, the tracked file points to the local HTTPS API. For container deployments, the Nginx startup script generates this file from environment variables, so one immutable image can be promoted through Development and Production.
+Do not use wildcard origins for this authenticated application.
 
 ## 3. Install and run
 
@@ -131,7 +128,7 @@ Open:
 http://localhost:4200
 ```
 
-The development proxy is included, but the application normally uses `apiBaseUrl` from runtime configuration.
+Local development also uses the API URL in `app-config.service.ts`.
 
 ## 4. Build
 
@@ -149,35 +146,17 @@ dist/ApiVault.Web/browser
 
 ```bash
 docker build -t apivault-web .
-docker run --rm -p 8080:8080 --env-file deploy/development.env apivault-web
+docker run --rm -p 8080:8080 apivault-web
 ```
 
-Copy `deploy/development.env.example` to an ignored deployment-specific environment file and supply the correct API URL. For production, use the platform's configuration facility with the variables listed in `deploy/production.env.example`:
-
-```text
-APIVAULT_ENVIRONMENT=Production
-APIVAULT_API_BASE_URL=https://api.example.bank
-APIVAULT_APPLICATION_NAME=ApiVault
-APIVAULT_ORGANIZATION_NAME=Example Bank
-APIVAULT_SESSION_STORAGE_KEY=apivault.session
-```
-
-The container refuses to start without `APIVAULT_API_BASE_URL`, or when a non-HTTPS API URL is used outside Development. The generated `/config/runtime-config.json` remains non-cacheable.
+Set `apiBaseUrl` before `docker build`; the image includes that URL.
 
 ## 6. IIS
 
-Build the Angular application and copy the contents of `dist/ApiVault.Web/browser` to the IIS website physical path. The included `web.config` uses built-in IIS features and does not require the optional URL Rewrite module.
-
-Configure the deployed API URL after copying the files:
-
-```powershell
-.\deploy\Configure-IisEnvironment.ps1 `
-  -PublishPath 'C:\inetpub\wwwroot\ApiVault.Web' `
-  -ApiBaseUrl 'https://api.example.bank' `
-  -EnvironmentName Production
-```
-
-For local IIS testing, use `-EnvironmentName Development` with an HTTP API URL such as `http://localhost:8025`.
+Build the Angular application and copy the contents of
+`dist/ApiVault.Web/browser` to the IIS website physical path. The included
+`web.config` uses built-in IIS features and does not require the optional
+URL Rewrite module. No post-publish configuration script is needed.
 
 ## Authentication storage
 

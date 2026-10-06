@@ -11,8 +11,7 @@ The shared ApiVault design system remains in `src/styles.scss`. This preserves t
 ## Preserved configuration
 
 - API base URL: `https://localhost:44315`
-- Angular development proxy: `proxy.conf.json`
-- Runtime configuration: `public/config/runtime-config.json`
+- API URL and app labels: `src/app/core/config/app-config.service.ts`
 - Authentication, guards, interceptors, routes, forms, API clients, role checks, CRUD operations, testing console, history, and administration behavior
 
 ## Validation performed

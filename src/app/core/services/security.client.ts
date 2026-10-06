@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { RuntimeConfigService } from '../config/runtime-config.service';
+import { AppConfigService } from '../config/app-config.service';
 import {
   CreateRoleRequest,
   PermissionResponse,
@@ -13,7 +13,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class SecurityClient {
   private readonly http = inject(HttpClient);
-  private readonly runtime = inject(RuntimeConfigService);
+  private readonly runtime = inject(AppConfigService);
 
   getRoles() { return this.http.get<RoleResponse[]>(this.runtime.apiUrl('/api/security/roles')); }
   createRole(request: CreateRoleRequest) { return this.http.post<RoleResponse>(this.runtime.apiUrl('/api/security/roles'), request); }

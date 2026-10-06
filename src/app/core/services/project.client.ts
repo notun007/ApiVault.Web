@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { RuntimeConfigService } from '../config/runtime-config.service';
+import { AppConfigService } from '../config/app-config.service';
 import {
   CreateProjectRequest,
   LinkProjectApiVersionRequest,
@@ -11,7 +11,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class ProjectClient {
   private readonly http = inject(HttpClient);
-  private readonly runtime = inject(RuntimeConfigService);
+  private readonly runtime = inject(AppConfigService);
 
   getAll(activeOnly = false) {
     return this.http.get<ProjectSummaryResponse[]>(this.runtime.apiUrl('/api/projects'), { params: { activeOnly } });
