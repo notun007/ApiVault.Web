@@ -68,6 +68,39 @@
           }
         </section>
 
+        <section class="panel authentication-profile-panel">
+          <header class="panel-header">
+            <div><span class="eyebrow">Runtime security</span><h2>Authentication Profile</h2><p>Apply the release’s token, credentials, API key, or custom headers automatically.</p></div>
+            @if (canManage()) { <button type="button" class="button button-primary button-small" (click)="openAuthenticationProfile(version)">{{ version.authenticationProfile ? 'Edit profile' : 'Configure profile' }}</button> }
+          </header>
+          @if (version.authenticationProfile; as profile) {
+            <div class="authentication-profile-summary">
+              <div><span>Status</span><strong><span class="badge" [class]="profile.isEnabled ? 'badge status-active' : 'badge status-retired'">{{ profile.isEnabled ? 'Enabled' : 'Disabled' }}</span></strong></div>
+              <div><span>Profile</span><strong>{{ profile.name }}</strong></div>
+              <div><span>Strategy</span><strong>{{ profile.type | enumLabel }}</strong></div>
+              @if (usesTokenEndpoint(profile.type)) { <div><span>Token endpoint</span><strong>{{ profile.tokenEndpointMethod }} {{ profile.tokenEndpointPath }}</strong><small>{{ profile.tokenEndpointName }}</small></div> }
+              @if (usesTokenEndpoint(profile.type)) { <div><span>Token field</span><strong><code>{{ profile.tokenJsonPath }}</code></strong></div> }
+              <div><span>Request header</span><strong><code>{{ profile.headerName }}</code></strong></div>
+              @if (usesTokenEndpoint(profile.type)) { <div><span>Refresh buffer</span><strong>{{ profile.refreshSkewSeconds }} seconds</strong></div> }
+            </div>
+            @if (canTest()) {
+              <div class="authentication-test-control">
+                <label class="field inline-field"><span>Test against environment</span><select class="select" #authenticationEnvironment><option value="">Select enabled environment</option>@for (environment of version.environments; track environment.id) { @if (environment.isEnabled) { <option [value]="environment.id">{{ environment.environmentType | enumLabel }} — {{ environment.baseUrl }}</option> } }</select></label>
+                <button class="button button-secondary" type="button" [disabled]="!authenticationEnvironment.value || authenticationTesting() || !profile.isEnabled" (click)="testAuthenticationProfile(version, authenticationEnvironment.value)">{{ authenticationTesting() ? 'Testing…' : 'Test authentication' }}</button>
+              </div>
+              @if (authenticationTestResult(); as result) {
+                <div class="inline-alert info"><strong>Authentication resolved successfully.</strong><span>{{ result.summary }}@if (result.expiresAtUtc) { Expires {{ formatDate(result.expiresAtUtc) }}{{ result.fromCache ? ' (cached).' : '.' }} }</span></div>
+              }
+            }
+          } @else {
+            <div class="authentication-profile-empty">
+              <div class="authentication-profile-icon">AUTH</div>
+              <div><strong>No automatic authentication configured</strong><p>Select a strategy and reference environment secret names. Other endpoints can then inherit it automatically.</p></div>
+              @if (canManage()) { <button type="button" class="button button-secondary button-small" (click)="openAuthenticationProfile(version)">Configure authentication</button> }
+            </div>
+          }
+        </section>
+
         <section class="panel">
           <header class="panel-header"><div><span class="eyebrow">Release usage</span><h2>Consuming applications</h2><p>Applications and systems linked to this exact API release.</p></div><span class="count-pill large">{{ version.consumers.length }}</span></header>
           @if (version.consumers.length === 0) {
@@ -160,6 +193,7 @@
     <div class="form-grid two-column">
       <label class="field"><span>Endpoint name *</span><input class="input" formControlName="name" placeholder="Get customer profile"></label>
       <label class="field"><span>HTTP method *</span><select class="select" formControlName="httpMethod">@for (method of httpMethods; track method) { <option [value]="method">{{ method }}</option> }</select></label>
+      <label class="field"><span>Authentication behavior *</span><select class="select" formControlName="authenticationMode">@for (mode of endpointAuthenticationModes; track mode) { <option [value]="mode">{{ mode | enumLabel }}</option> }</select><small>Inherit uses the release profile; Anonymous skips automatic authentication.</small></label>
       <label class="field field-span"><span>Relative path *</span><input class="input code-input" formControlName="relativePath" placeholder="/customers/{customerId}"></label>
       <label class="field field-span"><span>Description</span><textarea class="textarea" rows="3" formControlName="description"></textarea></label>
       <label class="field"><span>Request headers JSON</span><textarea class="textarea code-input" rows="5" formControlName="requestHeadersJson" placeholder='{"Accept":"application/json"}'></textarea></label>
@@ -174,6 +208,52 @@
     @if (modalError()) { <div class="inline-alert error">{{ modalError() }}</div> }
     <div class="modal-actions"><button class="button button-ghost" type="button" (click)="endpointModalOpen.set(false)">Cancel</button><button class="button button-primary" type="submit" [disabled]="modalSaving()">{{ modalSaving() ? 'Saving…' : 'Save endpoint' }}</button></div>
   </form>
+</app-modal>
+
+<app-modal [open]="authenticationProfileModalOpen()" title="Authentication Profile" eyebrow="Automatic request authentication" [wide]="true" (closed)="closeAuthenticationProfileModal()">
+  @if (authenticationProfileVersion(); as version) {
+    <form class="modal-form" [formGroup]="authenticationProfileForm" (ngSubmit)="saveAuthenticationProfile()">
+      <div class="inline-alert info"><strong>Credentials remain environment-specific.</strong><span>This profile stores only strategy settings and secret names. Encrypted secret values stay in each environment.</span></div>
+      <div class="form-grid two-column">
+        <label class="field"><span>Profile name *</span><input class="input" formControlName="name" placeholder="Automatic bearer authentication"></label>
+        <label class="field"><span>Authentication strategy *</span><select class="select" formControlName="type">@for (type of authenticationProfileTypes; track type) { <option [value]="type">{{ type | enumLabel }}</option> }</select></label>
+        @if (usesTokenEndpoint(authenticationProfileForm.controls.type.value)) {
+          <label class="field"><span>Token endpoint *</span><select class="select" formControlName="tokenEndpointId"><option value="">Select login or OAuth token endpoint</option>@for (endpoint of version.endpoints; track endpoint.id) { <option [value]="endpoint.id">{{ endpoint.httpMethod }} {{ endpoint.relativePath }} — {{ endpoint.name }}</option> }</select><small>The endpoint request sample may use environment secret placeholders.</small></label>
+          <label class="field"><span>Token JSON path *</span><input class="input code-input" formControlName="tokenJsonPath" placeholder="$.accessToken"></label>
+          <label class="field"><span>Token type JSON path</span><input class="input code-input" formControlName="tokenTypeJsonPath" placeholder="$.tokenType"></label>
+          <label class="field"><span>Absolute expiry JSON path</span><input class="input code-input" formControlName="expiresAtJsonPath" placeholder="$.expiresAtUtc"></label>
+          <label class="field"><span>Relative expiry JSON path</span><input class="input code-input" formControlName="expiresInJsonPath" placeholder="$.expiresIn"></label>
+          <label class="field"><span>Request header *</span><input class="input code-input" formControlName="headerName" placeholder="Authorization"></label>
+          <label class="field"><span>Refresh buffer (seconds) *</span><input class="input" type="number" min="0" max="3600" formControlName="refreshSkewSeconds"></label>
+        }
+        @if (authenticationProfileForm.controls.type.value === 'Basic') {
+          <label class="field"><span>Username secret name *</span><input class="input code-input" formControlName="usernameSecretName" placeholder="BASIC_USERNAME"></label>
+          <label class="field"><span>Password secret name *</span><input class="input code-input" formControlName="passwordSecretName" placeholder="BASIC_PASSWORD"></label>
+        }
+        @if (authenticationProfileForm.controls.type.value === 'ApiKey') {
+          <label class="field"><span>API key secret name *</span><input class="input code-input" formControlName="apiKeySecretName" placeholder="API_KEY"></label>
+          <label class="field"><span>API key header *</span><input class="input code-input" formControlName="apiKeyHeaderName" placeholder="X-API-Key"></label>
+        }
+        @if (authenticationProfileForm.controls.type.value === 'StaticBearer') {
+          <label class="field"><span>Token secret name *</span><input class="input code-input" formControlName="bearerSecretName" placeholder="BEARER_TOKEN"></label>
+          <label class="field"><span>Scheme *</span><input class="input code-input" formControlName="bearerScheme" placeholder="Bearer"></label>
+          <label class="field"><span>Request header *</span><input class="input code-input" formControlName="headerName" placeholder="Authorization"></label>
+        }
+        @if (authenticationProfileForm.controls.type.value === 'CustomHeaders') {
+          <label class="field field-span"><span>Custom header templates JSON *</span><textarea class="textarea code-input" rows="7" formControlName="customHeadersJson"></textarea><small>Use placeholders such as {{ '{{secret:CUSTOM_CLIENT_ID}}' }}; values are resolved from the selected environment.</small></label>
+        }
+        @if (authenticationProfileForm.controls.type.value === 'MutualTls') {
+          <label class="field"><span>Certificate PFX secret name *</span><input class="input code-input" formControlName="certificateSecretName"></label>
+          <label class="field"><span>Certificate password secret name</span><input class="input code-input" formControlName="certificatePasswordSecretName"></label>
+          <div class="inline-alert info field-span"><strong>PKCS#12 certificate required.</strong><span>Store the PFX as a Base64-encoded environment secret. ApiVault loads it ephemerally for the TLS handshake and does not expose it in evidence.</span></div>
+        }
+        <label class="switch-field field-span"><input type="checkbox" formControlName="isEnabled"><span class="switch"></span><div><strong>Enable automatic authentication</strong><small>When disabled, inherited endpoints execute without this profile.</small></div></label>
+      </div>
+      @if (usesTokenEndpoint(authenticationProfileForm.controls.type.value) && version.endpoints.length === 0) { <div class="inline-alert warning"><strong>No endpoint is available.</strong><span>Add the login or OAuth token endpoint before configuring this strategy.</span></div> }
+      @if (modalError()) { <div class="inline-alert error">{{ modalError() }}</div> }
+      <div class="modal-actions"><button class="button button-ghost" type="button" (click)="closeAuthenticationProfileModal()">Cancel</button><button class="button button-primary" type="submit" [disabled]="modalSaving() || (usesTokenEndpoint(authenticationProfileForm.controls.type.value) && version.endpoints.length === 0)">{{ modalSaving() ? 'Saving…' : 'Save authentication profile' }}</button></div>
+    </form>
+  }
 </app-modal>
 
 <app-modal [open]="environmentModalOpen()" [title]="editingEnvironment() ? 'Edit environment' : 'Add environment'" eyebrow="Deployment target" (closed)="environmentModalOpen.set(false)">
