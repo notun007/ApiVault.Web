@@ -26,6 +26,21 @@ export enum AuthenticationType {
   Custom = 'Custom'
 }
 
+export enum EndpointAuthenticationMode {
+  Inherit = 'Inherit',
+  Anonymous = 'Anonymous'
+}
+
+export enum AuthenticationProfileType {
+  TokenEndpoint = 'TokenEndpoint',
+  OAuth2ClientCredentials = 'OAuth2ClientCredentials',
+  Basic = 'Basic',
+  ApiKey = 'ApiKey',
+  StaticBearer = 'StaticBearer',
+  CustomHeaders = 'CustomHeaders',
+  MutualTls = 'MutualTls'
+}
+
 export enum DeploymentEnvironment {
   Development = 'Development',
   Uat = 'Uat',
@@ -160,6 +175,7 @@ export interface ApiVersionResponse {
   maxResponseBytes: number;
   timeoutSeconds: number;
   isCurrent: boolean;
+  authenticationProfile?: AuthenticationProfileResponse | null;
   consumers: ApiVersionConsumerResponse[];
   endpoints: EndpointResponse[];
   environments: EnvironmentResponse[];
@@ -188,6 +204,7 @@ export interface CreateEndpointRequest {
   responseBodySample?: string | null;
   successStatusCodesJson?: string | null;
   soapAction?: string | null;
+  authenticationMode: EndpointAuthenticationMode;
 }
 
 export interface EndpointResponse extends CreateEndpointRequest {
@@ -209,4 +226,38 @@ export interface EnvironmentResponse extends CreateEnvironmentRequest {
 export interface SetEnvironmentSecretRequest {
   name: string;
   value: string;
+}
+
+export interface UpsertAuthenticationProfileRequest {
+  name: string;
+  type: AuthenticationProfileType;
+  tokenEndpointId?: string | null;
+  tokenJsonPath: string;
+  tokenTypeJsonPath?: string | null;
+  expiresAtJsonPath?: string | null;
+  expiresInJsonPath?: string | null;
+  headerName: string;
+  configurationJson?: string | null;
+  refreshSkewSeconds: number;
+  isEnabled: boolean;
+}
+
+export interface AuthenticationProfileResponse extends UpsertAuthenticationProfileRequest {
+  id: string;
+  tokenEndpointName?: string | null;
+  tokenEndpointMethod?: string | null;
+  tokenEndpointPath?: string | null;
+}
+
+export interface TestAuthenticationProfileRequest {
+  apiEnvironmentId: string;
+}
+
+export interface AuthenticationProfileTestResponse {
+  isSuccess: boolean;
+  type: AuthenticationProfileType;
+  summary: string;
+  tokenType?: string | null;
+  expiresAtUtc?: string | null;
+  fromCache: boolean;
 }

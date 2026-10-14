@@ -6,6 +6,8 @@ import {
   ApiSearchQuery,
   ApiSummaryResponse,
   ApiVersionResponse,
+  AuthenticationProfileResponse,
+  AuthenticationProfileTestResponse,
   CreateApiRequest,
   CreateApiVersionRequest,
   CreateEndpointRequest,
@@ -15,6 +17,8 @@ import {
   LookupResponse,
   PagedResult,
   SetEnvironmentSecretRequest,
+  TestAuthenticationProfileRequest,
+  UpsertAuthenticationProfileRequest,
   UpdateApiVersionRequest
 } from '../models/api.models';
 
@@ -53,6 +57,20 @@ export class ApiCatalogClient {
 
   updateVersion(apiId: string, versionId: string, request: UpdateApiVersionRequest) {
     return this.http.put<ApiVersionResponse>(this.runtime.apiUrl(`/api/apis/${apiId}/versions/${versionId}`), request);
+  }
+
+  upsertAuthenticationProfile(apiId: string, versionId: string, request: UpsertAuthenticationProfileRequest) {
+    return this.http.put<AuthenticationProfileResponse>(
+      this.runtime.apiUrl(`/api/apis/${apiId}/versions/${versionId}/authentication-profile`),
+      request
+    );
+  }
+
+  testAuthenticationProfile(apiId: string, versionId: string, request: TestAuthenticationProfileRequest) {
+    return this.http.post<AuthenticationProfileTestResponse>(
+      this.runtime.apiUrl(`/api/apis/${apiId}/versions/${versionId}/authentication-profile/test`),
+      request
+    );
   }
 
   changeLifecycle(apiId: string, versionId: string, lifecycleStatus: string) {

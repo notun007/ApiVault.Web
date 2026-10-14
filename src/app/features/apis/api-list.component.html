@@ -59,9 +59,6 @@
               </td>
               <td class="actions-cell">
                 <div class="grid-actions">
-                  @if (api.versionCount > 1) {
-                    <a class="button button-secondary button-small" [routerLink]="['/apis', api.id, 'compare']">Compare versions</a>
-                  }
                   <a class="button button-ghost button-small" [routerLink]="['/apis', api.id]">Open</a>
                 </div>
               </td>

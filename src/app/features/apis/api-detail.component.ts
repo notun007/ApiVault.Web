@@ -7,13 +7,17 @@ import {
   ApiDetailResponse,
   ApiLifecycleStatus,
   ApiVersionResponse,
+  AuthenticationProfileType,
+  AuthenticationProfileTestResponse,
   AuthenticationType,
   CreateApiVersionRequest,
   CreateEndpointRequest,
   CreateEnvironmentRequest,
   DeploymentEnvironment,
+  EndpointAuthenticationMode,
   EndpointResponse,
   EnvironmentResponse,
+  UpsertAuthenticationProfileRequest,
   UpdateApiVersionRequest
 } from '../../core/models/api.models';
 import { UserRole } from '../../core/models/security.models';
@@ -46,20 +50,27 @@ export class ApiDetailComponent {
   readonly api = signal<ApiDetailResponse | null>(null);
   readonly selectedVersionId = signal('');
   readonly canManage = () => this.auth.hasAnyRole(UserRole.Admin, UserRole.ApiOwner);
+  readonly canTest = () => this.auth.hasAnyRole(UserRole.Admin, UserRole.ApiOwner, UserRole.Tester);
   readonly lifecycleStatuses = Object.values(ApiLifecycleStatus);
   readonly authenticationTypes = Object.values(AuthenticationType);
+  readonly authenticationProfileTypes = Object.values(AuthenticationProfileType);
   readonly environmentTypes = Object.values(DeploymentEnvironment);
   readonly httpMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+  readonly endpointAuthenticationModes = Object.values(EndpointAuthenticationMode);
 
   readonly versionModalOpen = signal(false);
   readonly endpointModalOpen = signal(false);
   readonly environmentModalOpen = signal(false);
   readonly secretModalOpen = signal(false);
+  readonly authenticationProfileModalOpen = signal(false);
   readonly editingVersion = signal<ApiVersionResponse | null>(null);
   readonly editingEndpoint = signal<EndpointResponse | null>(null);
   readonly editingEnvironment = signal<EnvironmentResponse | null>(null);
   readonly modalVersion = signal<ApiVersionResponse | null>(null);
   readonly secretEnvironment = signal<EnvironmentResponse | null>(null);
+  readonly authenticationProfileVersion = signal<ApiVersionResponse | null>(null);
+  readonly authenticationTestResult = signal<AuthenticationProfileTestResponse | null>(null);
+  readonly authenticationTesting = signal(false);
   readonly modalSaving = signal(false);
   readonly modalError = signal('');
 
@@ -93,7 +104,8 @@ export class ApiDetailComponent {
     responseHeadersSampleJson: [''],
     responseBodySample: [''],
     successStatusCodesJson: [''],
-    soapAction: ['', Validators.maxLength(1000)]
+    soapAction: ['', Validators.maxLength(1000)],
+    authenticationMode: [EndpointAuthenticationMode.Inherit, Validators.required]
   });
 
   readonly environmentForm = this.fb.nonNullable.group({
@@ -106,6 +118,28 @@ export class ApiDetailComponent {
   readonly secretForm = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.pattern(/^[A-Za-z0-9_.-]{1,100}$/)]],
     value: ['', [Validators.required, Validators.maxLength(8000)]]
+  });
+
+  readonly authenticationProfileForm = this.fb.nonNullable.group({
+    name: ['Automatic bearer authentication', [Validators.required, Validators.maxLength(200)]],
+    type: [AuthenticationProfileType.TokenEndpoint, Validators.required],
+    tokenEndpointId: [''],
+    tokenJsonPath: ['$.accessToken', [Validators.required, Validators.maxLength(500)]],
+    tokenTypeJsonPath: ['$.tokenType', Validators.maxLength(500)],
+    expiresAtJsonPath: ['$.expiresAtUtc', Validators.maxLength(500)],
+    expiresInJsonPath: ['', Validators.maxLength(500)],
+    headerName: ['Authorization', [Validators.required, Validators.pattern(/^[A-Za-z0-9-]{1,100}$/)]],
+    refreshSkewSeconds: [60, [Validators.required, Validators.min(0), Validators.max(3600)]],
+    isEnabled: [true],
+    usernameSecretName: ['BASIC_USERNAME'],
+    passwordSecretName: ['BASIC_PASSWORD'],
+    apiKeySecretName: ['API_KEY'],
+    apiKeyHeaderName: ['X-API-Key'],
+    bearerSecretName: ['BEARER_TOKEN'],
+    bearerScheme: ['Bearer'],
+    customHeadersJson: ['{\n  "headers": {\n    "X-Client-Id": "{{secret:CUSTOM_CLIENT_ID}}"\n  }\n}'],
+    certificateSecretName: ['MTLS_CERTIFICATE_PFX'],
+    certificatePasswordSecretName: ['MTLS_CERTIFICATE_PASSWORD']
   });
 
   constructor() { this.reload(); }
@@ -204,7 +238,7 @@ export class ApiDetailComponent {
       queryParametersJson: this.formatter.prettyJson(endpoint?.queryParametersJson), pathParametersJson: this.formatter.prettyJson(endpoint?.pathParametersJson),
       requestPayloadSample: endpoint?.requestPayloadSample ?? '', responseHeadersSampleJson: this.formatter.prettyJson(endpoint?.responseHeadersSampleJson),
       responseBodySample: endpoint?.responseBodySample ?? '', successStatusCodesJson: this.formatter.prettyJson(endpoint?.successStatusCodesJson),
-      soapAction: endpoint?.soapAction ?? ''
+      soapAction: endpoint?.soapAction ?? '', authenticationMode: endpoint?.authenticationMode ?? EndpointAuthenticationMode.Inherit
     });
     this.endpointModalOpen.set(true);
   }
@@ -220,7 +254,8 @@ export class ApiDetailComponent {
         requestHeadersJson: this.normalizeJson(value.requestHeadersJson), queryParametersJson: this.normalizeJson(value.queryParametersJson),
         pathParametersJson: this.normalizeJson(value.pathParametersJson), requestPayloadSample: value.requestPayloadSample || null,
         responseHeadersSampleJson: this.normalizeJson(value.responseHeadersSampleJson), responseBodySample: value.responseBodySample || null,
-        successStatusCodesJson: this.normalizeJson(value.successStatusCodesJson), soapAction: value.soapAction || null
+        successStatusCodesJson: this.normalizeJson(value.successStatusCodesJson), soapAction: value.soapAction || null,
+        authenticationMode: value.authenticationMode
       };
       this.modalSaving.set(true);
       const editing = this.editingEndpoint();
@@ -284,10 +319,163 @@ export class ApiDetailComponent {
     });
   }
 
+  openAuthenticationProfile(version: ApiVersionResponse): void {
+    const profile = version.authenticationProfile;
+    const config = this.parseProfileConfiguration(profile?.configurationJson);
+    this.authenticationProfileVersion.set(version);
+    this.authenticationTestResult.set(null);
+    this.modalError.set('');
+    this.authenticationProfileForm.reset({
+      name: profile?.name ?? 'Automatic bearer authentication',
+      type: profile?.type ?? AuthenticationProfileType.TokenEndpoint,
+      tokenEndpointId: profile?.tokenEndpointId ?? '',
+      tokenJsonPath: profile?.tokenJsonPath ?? '$.accessToken',
+      tokenTypeJsonPath: profile?.tokenTypeJsonPath ?? '$.tokenType',
+      expiresAtJsonPath: profile?.expiresAtJsonPath ?? '$.expiresAtUtc',
+      expiresInJsonPath: profile?.expiresInJsonPath ?? '',
+      headerName: profile?.headerName ?? 'Authorization',
+      refreshSkewSeconds: profile?.refreshSkewSeconds ?? 60,
+      isEnabled: profile?.isEnabled ?? true,
+      usernameSecretName: this.configString(config, 'usernameSecretName', 'BASIC_USERNAME'),
+      passwordSecretName: this.configString(config, 'passwordSecretName', 'BASIC_PASSWORD'),
+      apiKeySecretName: this.configString(config, 'secretName', 'API_KEY'),
+      apiKeyHeaderName: this.configString(config, 'headerName', 'X-API-Key'),
+      bearerSecretName: this.configString(config, 'secretName', 'BEARER_TOKEN'),
+      bearerScheme: this.configString(config, 'scheme', 'Bearer'),
+      customHeadersJson: profile?.type === AuthenticationProfileType.CustomHeaders
+        ? JSON.stringify(config, null, 2)
+        : '{\n  "headers": {\n    "X-Client-Id": "{{secret:CUSTOM_CLIENT_ID}}"\n  }\n}',
+      certificateSecretName: this.configString(config, 'certificateSecretName', 'MTLS_CERTIFICATE_PFX'),
+      certificatePasswordSecretName: this.configString(config, 'certificatePasswordSecretName', 'MTLS_CERTIFICATE_PASSWORD')
+    });
+    this.authenticationProfileModalOpen.set(true);
+  }
+
+  closeAuthenticationProfileModal(): void {
+    this.authenticationProfileModalOpen.set(false);
+    this.authenticationProfileVersion.set(null);
+    this.authenticationTestResult.set(null);
+  }
+
+  saveAuthenticationProfile(): void {
+    if (this.authenticationProfileForm.invalid || this.modalSaving()) {
+      this.authenticationProfileForm.markAllAsTouched();
+      return;
+    }
+    const version = this.authenticationProfileVersion();
+    if (!version) return;
+    const value = this.authenticationProfileForm.getRawValue();
+    if (this.usesTokenEndpoint(value.type) && !value.tokenEndpointId) {
+      this.modalError.set('A token endpoint is required for this authentication type.');
+      return;
+    }
+    let configurationJson: string | null;
+    try {
+      configurationJson = this.buildProfileConfiguration(value);
+    } catch {
+      this.modalError.set('The authentication configuration must contain valid JSON.');
+      return;
+    }
+    const request: UpsertAuthenticationProfileRequest = {
+      name: value.name,
+      type: value.type,
+      tokenEndpointId: this.usesTokenEndpoint(value.type) ? value.tokenEndpointId : null,
+      tokenJsonPath: value.tokenJsonPath,
+      tokenTypeJsonPath: value.tokenTypeJsonPath || null,
+      expiresAtJsonPath: value.expiresAtJsonPath || null,
+      expiresInJsonPath: value.expiresInJsonPath || null,
+      headerName: value.type === AuthenticationProfileType.ApiKey
+        ? value.apiKeyHeaderName
+        : value.type === AuthenticationProfileType.Basic
+          ? 'Authorization'
+          : value.type === AuthenticationProfileType.CustomHeaders
+            ? 'Custom'
+            : value.type === AuthenticationProfileType.MutualTls
+              ? 'mTLS'
+              : value.headerName,
+      refreshSkewSeconds: value.refreshSkewSeconds,
+      isEnabled: value.isEnabled,
+      configurationJson
+    };
+    this.modalSaving.set(true);
+    this.modalError.set('');
+    this.apiClient.upsertAuthenticationProfile(this.id, version.id, request).subscribe({
+      next: () => {
+        this.modalSaving.set(false);
+        this.closeAuthenticationProfileModal();
+        this.toast.success('Authentication profile saved', 'Inherited endpoints will use the selected authentication strategy.');
+        this.reload(version.id);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.modalSaving.set(false);
+        this.modalError.set(readProblem(error));
+      }
+    });
+  }
+
+  testAuthenticationProfile(version: ApiVersionResponse, apiEnvironmentId: string): void {
+    if (!apiEnvironmentId || this.authenticationTesting()) return;
+    this.authenticationTesting.set(true);
+    this.authenticationTestResult.set(null);
+    this.apiClient.testAuthenticationProfile(this.id, version.id, { apiEnvironmentId }).subscribe({
+      next: (result) => {
+        this.authenticationTesting.set(false);
+        this.authenticationTestResult.set(result);
+        this.toast.success('Authentication succeeded', result.summary);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.authenticationTesting.set(false);
+        this.toast.error('Authentication test failed', readProblem(error));
+      }
+    });
+  }
+
   normalizeJson(value?: string | null): string | null {
     const trimmed = value?.trim();
     if (!trimmed) return null;
     return JSON.stringify(JSON.parse(trimmed));
+  }
+
+  usesTokenEndpoint(type: AuthenticationProfileType): boolean {
+    return type === AuthenticationProfileType.TokenEndpoint || type === AuthenticationProfileType.OAuth2ClientCredentials;
+  }
+
+  private parseProfileConfiguration(value?: string | null): Record<string, unknown> {
+    if (!value) return {};
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+    } catch { return {}; }
+  }
+
+  private configString(config: Record<string, unknown>, key: string, fallback: string): string {
+    return typeof config[key] === 'string' ? config[key] as string : fallback;
+  }
+
+  private buildProfileConfiguration(value: ReturnType<typeof this.authenticationProfileForm.getRawValue>): string | null {
+    let configuration: Record<string, unknown> = {};
+    switch (value.type) {
+      case AuthenticationProfileType.Basic:
+        configuration = { usernameSecretName: value.usernameSecretName, passwordSecretName: value.passwordSecretName };
+        break;
+      case AuthenticationProfileType.ApiKey:
+        configuration = { location: 'Header', secretName: value.apiKeySecretName, headerName: value.apiKeyHeaderName };
+        break;
+      case AuthenticationProfileType.StaticBearer:
+        configuration = { secretName: value.bearerSecretName, scheme: value.bearerScheme };
+        break;
+      case AuthenticationProfileType.CustomHeaders:
+        return this.normalizeJson(value.customHeadersJson);
+      case AuthenticationProfileType.MutualTls:
+        configuration = {
+          certificateSecretName: value.certificateSecretName,
+          certificatePasswordSecretName: value.certificatePasswordSecretName
+        };
+        break;
+      default:
+        return null;
+    }
+    return JSON.stringify(configuration);
   }
 
   formatDate(value: string): string { return new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' }).format(new Date(value)); }
