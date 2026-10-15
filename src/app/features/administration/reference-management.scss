@@ -1,0 +1,14 @@
+.reference-panel {
+  min-width: 0;
+  overflow: hidden;
+  padding-top: 0;
+}
+
+.actions-heading { text-align: right; }
+.actions-cell { text-align: right; white-space: nowrap; }
+.actions-cell .button + .button { margin-left: 7px; }
+.reference-count { display: inline-grid; min-width: 30px; height: 25px; place-items: center; margin-right: 7px; border-radius: 99px; color: var(--green-700); background: var(--green-100); font-weight: 800; }
+.reference-count.in-use { color: var(--amber-700); background: var(--amber-100); }
+.delete-confirm { border-color: var(--red-700); background: var(--red-700); box-shadow: none; }
+.delete-confirm:hover:not(:disabled) { background: #8f2929; }
+

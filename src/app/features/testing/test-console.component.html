@@ -12,7 +12,7 @@
     <div class="form-grid two-column selection-grid">
       <label class="field"><span>API *</span><select class="select" [ngModel]="selectedApiId()" (ngModelChange)="selectApi($event)"><option value="">Select API</option>@for (api of apis(); track api.id) { <option [value]="api.id">{{ api.name }} — {{ api.publishingApplication.name }}</option> }</select></label>
       <label class="field"><span>Version *</span><select class="select" [ngModel]="selectedVersionId()" (ngModelChange)="selectVersion($event)" [disabled]="!apiDetail()"><option value="">Select release</option>@for (version of versions(); track version.id) { <option [value]="version.id">v{{ version.version }} — {{ version.lifecycleStatus }}</option> }</select></label>
-      <label class="field"><span>Endpoint *</span><select class="select" [ngModel]="selectedEndpointId()" (ngModelChange)="selectEndpoint($event)" [disabled]="!selectedVersion()"><option value="">Select endpoint</option>@for (endpoint of endpoints(); track endpoint.id) { <option [value]="endpoint.id">{{ endpoint.httpMethod }} {{ endpoint.relativePath }}</option> }</select></label>
+      <label class="field"><span>Endpoint *</span><select class="select" [ngModel]="selectedEndpointId()" (ngModelChange)="selectEndpoint($event)" [disabled]="!selectedVersion()"><option value="">Select endpoint</option>@for (endpoint of endpoints(); track endpoint.id) { <option [value]="endpoint.id">{{ endpoint.httpMethod }} {{ endpoint.relativePath }}{{ endpoint.id === selectedVersion()?.authenticationProfile?.tokenEndpointId ? ' — authentication' : '' }}</option> }</select></label>
       <label class="field"><span>Environment *</span><select class="select" [ngModel]="selectedEnvironmentId()" (ngModelChange)="selectedEnvironmentId.set($event)" [disabled]="!selectedVersion()"><option value="">Select environment</option>@for (environment of environments(); track environment.id) { <option [value]="environment.id" [disabled]="!environment.isEnabled">{{ environment.environmentType | enumLabel }} — {{ environment.baseUrl }}</option> }</select></label>
     </div>
 
@@ -33,8 +33,8 @@
         @case ('body') { <textarea class="textarea code-input request-body" rows="16" [(ngModel)]="body" placeholder="Request body"></textarea> }
         @case ('settings') {
           <div class="form-grid two-column">
-            <label class="field"><span>Timeout override</span><input class="input" type="number" min="1" max="300" [(ngModel)]="timeoutSeconds" [attr.placeholder]="selectedVersion()?.timeoutSeconds ?? 30"><small>Cannot exceed server and release controls.</small></label>
-            <div class="limit-summary"><div><span>Request ceiling</span><strong>{{ formatter.byteSize(selectedVersion()?.maxRequestBytes || 0) }}</strong></div><div><span>Response ceiling</span><strong>{{ formatter.byteSize(selectedVersion()?.maxResponseBytes || 0) }}</strong></div><div><span>Redirects</span><strong>Disabled</strong></div><div><span>Private hosts</span><strong>Allowlist only</strong></div></div>
+            <label class="field"><span>One-off timeout override</span><input class="input" type="number" min="1" max="300" [(ngModel)]="timeoutSeconds" [attr.placeholder]="effectiveTimeoutSeconds()"><small>Leave blank to use the endpoint override or release default. The server cap always applies.</small></label>
+            <div class="limit-summary"><div><span>Request ceiling</span><strong>{{ formatter.byteSize(effectiveMaxRequestBytes()) }}</strong></div><div><span>Response ceiling</span><strong>{{ formatter.byteSize(effectiveMaxResponseBytes()) }}</strong></div><div><span>Redirects</span><strong>Disabled</strong></div><div><span>Private hosts</span><strong>Allowlist only</strong></div></div>
           </div>
         }
       }

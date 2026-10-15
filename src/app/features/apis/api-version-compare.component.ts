@@ -73,9 +73,9 @@ export class ApiVersionCompareComponent {
         rows: [
           this.row('Authentication', versions.map((version) => this.toLabel(version.authenticationType))),
           this.row('Authentication instructions', versions.map((version) => version.authenticationInstructions || this.missingValue)),
-          this.row('Maximum request', versions.map((version) => this.format.byteSize(version.maxRequestBytes))),
-          this.row('Maximum response', versions.map((version) => this.format.byteSize(version.maxResponseBytes))),
-          this.row('Timeout', versions.map((version) => `${version.timeoutSeconds} seconds`))
+          this.row('Default maximum request', versions.map((version) => this.format.byteSize(version.maxRequestBytes))),
+          this.row('Default maximum response', versions.map((version) => this.format.byteSize(version.maxResponseBytes))),
+          this.row('Default timeout', versions.map((version) => `${version.timeoutSeconds} seconds`))
         ]
       },
       {
@@ -194,9 +194,9 @@ export class ApiVersionCompareComponent {
       this.row('Change log', versions.map((version) => version.changeLog || this.missingValue)),
       this.row('Authentication', versions.map((version) => this.toLabel(version.authenticationType))),
       this.row('Authentication instructions', versions.map((version) => version.authenticationInstructions || this.missingValue)),
-      this.row('Maximum request', versions.map((version) => this.format.byteSize(version.maxRequestBytes))),
-      this.row('Maximum response', versions.map((version) => this.format.byteSize(version.maxResponseBytes))),
-      this.row('Timeout', versions.map((version) => `${version.timeoutSeconds} seconds`)),
+      this.row('Default maximum request', versions.map((version) => this.format.byteSize(version.maxRequestBytes))),
+      this.row('Default maximum response', versions.map((version) => this.format.byteSize(version.maxResponseBytes))),
+      this.row('Default timeout', versions.map((version) => `${version.timeoutSeconds} seconds`)),
       ...this.environmentRows(versions),
       ...this.endpointRows(versions),
       ...this.consumerRows(versions)

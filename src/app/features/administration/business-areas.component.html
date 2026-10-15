@@ -1,0 +1,32 @@
+<app-page-header title="Business areas" eyebrow="Business classification" description="Maintain the business domains used to classify APIs and applications/systems.">
+  <button class="button button-primary" type="button" (click)="open()">+ Add business area</button>
+</app-page-header>
+
+<section class="panel reference-panel">
+  @if (loadError()) { <div class="inline-alert error">{{ loadError() }}</div> }
+  @if (loading()) { <div class="table-loading">Loading business areas…</div> }
+  @else if (items().length === 0) { <app-empty-state symbol="BA" title="No business areas" message="Add the first business classification."></app-empty-state> }
+  @else {
+    <div class="table-wrap"><table><thead><tr><th>Code</th><th>Business area</th><th>References</th><th class="actions-heading">Actions</th></tr></thead><tbody>
+      @for (item of items(); track item.id) {
+        <tr><td><code>{{ item.code }}</code></td><td><strong class="cell-strong">{{ item.name }}</strong><small>{{ item.description || 'No description' }}</small></td><td><span class="reference-count" [class.in-use]="item.referenceCount > 0">{{ item.referenceCount }}</span><small>{{ item.referenceCount === 1 ? 'reference' : 'references' }}</small></td><td class="actions-cell"><button class="button button-ghost button-small" type="button" (click)="open(item)">Edit</button><button class="button button-ghost button-small danger-ghost" type="button" [disabled]="!item.canDelete" [title]="item.canDelete ? 'Delete business area' : 'Referenced records cannot be deleted'" (click)="askDelete(item)">Delete</button></td></tr>
+      }
+    </tbody></table></div>
+  }
+</section>
+
+<app-modal [open]="editorOpen()" [title]="editing() ? 'Edit business area' : 'Add business area'" eyebrow="Business classification" (closed)="editorOpen.set(false)">
+  <form class="modal-form" [formGroup]="form" (ngSubmit)="save()">
+    <label class="field"><span>Code *</span><input class="input code-input" formControlName="code" placeholder="e.g. RETAIL"></label>
+    <label class="field"><span>Name *</span><input class="input" formControlName="name" placeholder="Display name"></label>
+    <label class="field"><span>Description</span><textarea class="textarea" rows="4" formControlName="description"></textarea></label>
+    @if (editorError()) { <div class="inline-alert error">{{ editorError() }}</div> }
+    <div class="modal-actions"><button class="button button-ghost" type="button" (click)="editorOpen.set(false)">Cancel</button><button class="button button-primary" type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save business area' }}</button></div>
+  </form>
+</app-modal>
+
+<app-modal [open]="!!deleteTarget()" title="Delete business area?" eyebrow="Permanent action" (closed)="deleteTarget.set(null)">
+  <p>Delete <strong>{{ deleteTarget()?.name }}</strong>? This is allowed only while the business area has no references.</p>
+  @if (deleteError()) { <div class="inline-alert error">{{ deleteError() }}</div> }
+  <div class="modal-actions"><button class="button button-ghost" type="button" (click)="deleteTarget.set(null)">Cancel</button><button class="button button-primary delete-confirm" type="button" [disabled]="deleting()" (click)="delete()">{{ deleting() ? 'Deleting…' : 'Delete business area' }}</button></div>
+</app-modal>

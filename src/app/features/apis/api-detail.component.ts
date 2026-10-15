@@ -62,12 +62,14 @@ export class ApiDetailComponent {
   readonly endpointModalOpen = signal(false);
   readonly environmentModalOpen = signal(false);
   readonly secretModalOpen = signal(false);
+  readonly authenticationProfileDetailsOpen = signal(false);
   readonly authenticationProfileModalOpen = signal(false);
   readonly editingVersion = signal<ApiVersionResponse | null>(null);
   readonly editingEndpoint = signal<EndpointResponse | null>(null);
   readonly editingEnvironment = signal<EnvironmentResponse | null>(null);
   readonly modalVersion = signal<ApiVersionResponse | null>(null);
   readonly secretEnvironment = signal<EnvironmentResponse | null>(null);
+  readonly authenticationProfileDetailsVersion = signal<ApiVersionResponse | null>(null);
   readonly authenticationProfileVersion = signal<ApiVersionResponse | null>(null);
   readonly authenticationTestResult = signal<AuthenticationProfileTestResponse | null>(null);
   readonly authenticationTesting = signal(false);
@@ -105,7 +107,10 @@ export class ApiDetailComponent {
     responseBodySample: [''],
     successStatusCodesJson: [''],
     soapAction: ['', Validators.maxLength(1000)],
-    authenticationMode: [EndpointAuthenticationMode.Inherit, Validators.required]
+    authenticationMode: [EndpointAuthenticationMode.Inherit, Validators.required],
+    maxRequestBytes: this.fb.control<number | null>(null, [Validators.min(1), Validators.max(50000000)]),
+    maxResponseBytes: this.fb.control<number | null>(null, [Validators.min(1), Validators.max(100000000)]),
+    timeoutSeconds: this.fb.control<number | null>(null, [Validators.min(1), Validators.max(300)])
   });
 
   readonly environmentForm = this.fb.nonNullable.group({
@@ -238,7 +243,9 @@ export class ApiDetailComponent {
       queryParametersJson: this.formatter.prettyJson(endpoint?.queryParametersJson), pathParametersJson: this.formatter.prettyJson(endpoint?.pathParametersJson),
       requestPayloadSample: endpoint?.requestPayloadSample ?? '', responseHeadersSampleJson: this.formatter.prettyJson(endpoint?.responseHeadersSampleJson),
       responseBodySample: endpoint?.responseBodySample ?? '', successStatusCodesJson: this.formatter.prettyJson(endpoint?.successStatusCodesJson),
-      soapAction: endpoint?.soapAction ?? '', authenticationMode: endpoint?.authenticationMode ?? EndpointAuthenticationMode.Inherit
+      soapAction: endpoint?.soapAction ?? '', authenticationMode: endpoint?.authenticationMode ?? EndpointAuthenticationMode.Inherit,
+      maxRequestBytes: endpoint?.maxRequestBytes ?? null, maxResponseBytes: endpoint?.maxResponseBytes ?? null,
+      timeoutSeconds: endpoint?.timeoutSeconds ?? null
     });
     this.endpointModalOpen.set(true);
   }
@@ -255,7 +262,10 @@ export class ApiDetailComponent {
         pathParametersJson: this.normalizeJson(value.pathParametersJson), requestPayloadSample: value.requestPayloadSample || null,
         responseHeadersSampleJson: this.normalizeJson(value.responseHeadersSampleJson), responseBodySample: value.responseBodySample || null,
         successStatusCodesJson: this.normalizeJson(value.successStatusCodesJson), soapAction: value.soapAction || null,
-        authenticationMode: value.authenticationMode
+        authenticationMode: value.authenticationMode,
+        maxRequestBytes: value.maxRequestBytes,
+        maxResponseBytes: value.maxResponseBytes,
+        timeoutSeconds: value.timeoutSeconds
       };
       this.modalSaving.set(true);
       const editing = this.editingEndpoint();
@@ -317,6 +327,18 @@ export class ApiDetailComponent {
       next: () => { this.modalSaving.set(false); this.secretModalOpen.set(false); this.toast.success('Secret encrypted and stored'); this.reload(version.id); },
       error: (error: HttpErrorResponse) => { this.modalSaving.set(false); this.modalError.set(readProblem(error)); }
     });
+  }
+
+  openAuthenticationProfileDetails(version: ApiVersionResponse): void {
+    this.authenticationProfileDetailsVersion.set(version);
+    this.authenticationTestResult.set(null);
+    this.authenticationProfileDetailsOpen.set(true);
+  }
+
+  closeAuthenticationProfileDetails(): void {
+    this.authenticationProfileDetailsOpen.set(false);
+    this.authenticationProfileDetailsVersion.set(null);
+    this.authenticationTestResult.set(null);
   }
 
   openAuthenticationProfile(version: ApiVersionResponse): void {

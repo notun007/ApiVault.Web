@@ -23,8 +23,24 @@ export class AdminClient {
     return this.http.post<LookupResponse>(this.runtime.apiUrl('/api/reference-data/business-areas'), request);
   }
 
+  updateBusinessArea(id: string, request: CreateLookupRequest) {
+    return this.http.put<LookupResponse>(this.runtime.apiUrl(`/api/reference-data/business-areas/${id}`), request);
+  }
+
+  deleteBusinessArea(id: string) {
+    return this.http.delete<void>(this.runtime.apiUrl(`/api/reference-data/business-areas/${id}`));
+  }
+
   createDevelopmentTeam(request: CreateLookupRequest) {
     return this.http.post<LookupResponse>(this.runtime.apiUrl('/api/reference-data/development-teams'), request);
+  }
+
+  updateDevelopmentTeam(id: string, request: CreateLookupRequest) {
+    return this.http.put<LookupResponse>(this.runtime.apiUrl(`/api/reference-data/development-teams/${id}`), request);
+  }
+
+  deleteDevelopmentTeam(id: string) {
+    return this.http.delete<void>(this.runtime.apiUrl(`/api/reference-data/development-teams/${id}`));
   }
 
   getUsers() {

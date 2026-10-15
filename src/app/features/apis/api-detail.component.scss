@@ -70,9 +70,56 @@
   background: var(--surface-soft);
 }
 
-.authentication-profile-panel {
+.authentication-overview {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
   overflow: hidden;
+  padding: 18px 20px;
+  border-color: #c8ded9;
+  background: linear-gradient(105deg, #f7fcfb 0%, #fff 58%);
 }
+
+.authentication-overview::after {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  right: -56px;
+  border: 30px solid rgba(20, 153, 141, .045);
+  border-radius: 50%;
+  content: '';
+  pointer-events: none;
+}
+
+.authentication-overview { position: relative; }
+.authentication-overview-disabled { background: linear-gradient(105deg, #f7f8f8 0%, #fff 58%); }
+.authentication-overview-icon, .authentication-dialog-icon { display: grid; place-items: center; color: var(--brand-700); background: var(--brand-100); }
+.authentication-overview-icon { width: 48px; height: 48px; border-radius: 14px; }
+.authentication-overview-icon svg, .authentication-dialog-icon svg, .authentication-safety-note svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.authentication-overview-copy { min-width: 0; }
+.authentication-overview-copy .eyebrow { margin-bottom: 4px; }
+.authentication-overview-copy h2, .authentication-overview-copy p { margin: 0; }
+.authentication-overview-copy h2 { font-size: 17px; }
+.authentication-overview-copy p { margin-top: 4px; color: var(--muted); font-size: 11px; }
+.authentication-overview-title { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.authentication-overview-actions { position: relative; z-index: 1; display: flex; gap: 8px; }
+
+.authentication-profile-dialog { display: grid; gap: 18px; }
+.authentication-dialog-hero { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 18px; border: 1px solid #c8ded9; border-radius: 14px; background: linear-gradient(105deg, var(--brand-50), #fff); }
+.authentication-dialog-icon { width: 54px; height: 54px; border-radius: 16px; }
+.authentication-dialog-hero h3, .authentication-dialog-hero p, .authentication-test-section h3, .authentication-test-section p, .authentication-safety-note p, .authentication-test-success p { margin: 0; }
+.authentication-dialog-hero h3 { margin-top: 5px; font-size: 18px; }
+.authentication-dialog-hero p, .authentication-test-section p, .authentication-safety-note p, .authentication-test-success p { margin-top: 4px; color: var(--muted); font-size: 11px; }
+.authentication-dialog-status { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 10px; }
+.authentication-profile-summary-dialog { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.authentication-summary-wide { grid-column: span 2; }
+.authentication-safety-note { display: flex; gap: 12px; padding: 14px 16px; border: 1px solid #c9e3dd; border-radius: 12px; color: var(--brand-700); background: var(--brand-50); }
+.authentication-safety-note svg { flex: 0 0 auto; width: 20px; height: 20px; }
+.authentication-safety-note strong { color: var(--ink); font-size: 12px; }
+.authentication-test-section { padding-top: 2px; }
+.authentication-test-success { display: flex; align-items: center; gap: 11px; margin-top: 12px; padding: 13px 14px; border: 1px solid #b8dfce; border-radius: 11px; background: var(--green-100); }
+.authentication-success-mark { display: grid; width: 28px; height: 28px; place-items: center; flex: 0 0 auto; border-radius: 50%; color: #fff; background: var(--green-700); font-weight: 800; }
 
 .authentication-profile-summary {
   display: grid;
@@ -150,7 +197,13 @@
 
 @media (max-width: 760px) {
   .consumer-grid { grid-template-columns: 1fr; }
+  .authentication-overview { grid-template-columns: auto 1fr; }
+  .authentication-overview-actions { grid-column: 1 / -1; }
+  .authentication-overview-actions .button { flex: 1; }
   .authentication-profile-summary { grid-template-columns: 1fr; }
+  .authentication-summary-wide { grid-column: auto; }
+  .authentication-dialog-hero { grid-template-columns: auto 1fr; }
+  .authentication-dialog-hero > .button { grid-column: 1 / -1; width: 100%; }
   .authentication-profile-empty { grid-template-columns: auto 1fr; }
   .authentication-profile-empty .button { grid-column: 1 / -1; width: 100%; }
   .authentication-test-control { align-items: stretch; flex-direction: column; }

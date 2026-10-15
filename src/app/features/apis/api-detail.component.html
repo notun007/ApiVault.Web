@@ -56,9 +56,9 @@
             <div><span>Lifecycle</span><strong><span class="badge" [class]="'badge ' + statusClass(version.lifecycleStatus)">{{ version.lifecycleStatus }}</span></strong></div>
             <div><span>Release date</span><strong>{{ version.releaseDateUtc ? (formatDate(version.releaseDateUtc)) : 'Not set' }}</strong></div>
             <div><span>Authentication</span><strong>{{ version.authenticationType | enumLabel }}</strong></div>
-            <div><span>Timeout</span><strong>{{ version.timeoutSeconds }} seconds</strong></div>
-            <div><span>Request ceiling</span><strong>{{ formatter.byteSize(version.maxRequestBytes) }}</strong></div>
-            <div><span>Response ceiling</span><strong>{{ formatter.byteSize(version.maxResponseBytes) }}</strong></div>
+            <div><span>Default timeout</span><strong>{{ version.timeoutSeconds }} seconds</strong></div>
+            <div><span>Default request ceiling</span><strong>{{ formatter.byteSize(version.maxRequestBytes) }}</strong></div>
+            <div><span>Default response ceiling</span><strong>{{ formatter.byteSize(version.maxResponseBytes) }}</strong></div>
           </div>
           @if (canManage()) {
             <div class="lifecycle-control">
@@ -68,36 +68,14 @@
           }
         </section>
 
-        <section class="panel authentication-profile-panel">
-          <header class="panel-header">
-            <div><span class="eyebrow">Runtime security</span><h2>Authentication Profile</h2><p>Apply the release’s token, credentials, API key, or custom headers automatically.</p></div>
-            @if (canManage()) { <button type="button" class="button button-primary button-small" (click)="openAuthenticationProfile(version)">{{ version.authenticationProfile ? 'Edit profile' : 'Configure profile' }}</button> }
-          </header>
+        <section class="panel authentication-overview" [class.authentication-overview-disabled]="version.authenticationProfile && !version.authenticationProfile.isEnabled">
+          <div class="authentication-overview-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.7 2.9 8.2 7 10 4.1-1.8 7-5.3 7-10V6l-7-3Z"></path><path d="m8.7 12 2.1 2.1 4.6-4.7"></path></svg></div>
           @if (version.authenticationProfile; as profile) {
-            <div class="authentication-profile-summary">
-              <div><span>Status</span><strong><span class="badge" [class]="profile.isEnabled ? 'badge status-active' : 'badge status-retired'">{{ profile.isEnabled ? 'Enabled' : 'Disabled' }}</span></strong></div>
-              <div><span>Profile</span><strong>{{ profile.name }}</strong></div>
-              <div><span>Strategy</span><strong>{{ profile.type | enumLabel }}</strong></div>
-              @if (usesTokenEndpoint(profile.type)) { <div><span>Token endpoint</span><strong>{{ profile.tokenEndpointMethod }} {{ profile.tokenEndpointPath }}</strong><small>{{ profile.tokenEndpointName }}</small></div> }
-              @if (usesTokenEndpoint(profile.type)) { <div><span>Token field</span><strong><code>{{ profile.tokenJsonPath }}</code></strong></div> }
-              <div><span>Request header</span><strong><code>{{ profile.headerName }}</code></strong></div>
-              @if (usesTokenEndpoint(profile.type)) { <div><span>Refresh buffer</span><strong>{{ profile.refreshSkewSeconds }} seconds</strong></div> }
-            </div>
-            @if (canTest()) {
-              <div class="authentication-test-control">
-                <label class="field inline-field"><span>Test against environment</span><select class="select" #authenticationEnvironment><option value="">Select enabled environment</option>@for (environment of version.environments; track environment.id) { @if (environment.isEnabled) { <option [value]="environment.id">{{ environment.environmentType | enumLabel }} — {{ environment.baseUrl }}</option> } }</select></label>
-                <button class="button button-secondary" type="button" [disabled]="!authenticationEnvironment.value || authenticationTesting() || !profile.isEnabled" (click)="testAuthenticationProfile(version, authenticationEnvironment.value)">{{ authenticationTesting() ? 'Testing…' : 'Test authentication' }}</button>
-              </div>
-              @if (authenticationTestResult(); as result) {
-                <div class="inline-alert info"><strong>Authentication resolved successfully.</strong><span>{{ result.summary }}@if (result.expiresAtUtc) { Expires {{ formatDate(result.expiresAtUtc) }}{{ result.fromCache ? ' (cached).' : '.' }} }</span></div>
-              }
-            }
+            <div class="authentication-overview-copy"><span class="eyebrow">Automatic authentication</span><div class="authentication-overview-title"><h2>{{ profile.name }}</h2><span class="badge" [class]="profile.isEnabled ? 'badge status-active' : 'badge status-retired'">{{ profile.isEnabled ? 'Enabled' : 'Disabled' }}</span></div><p>{{ profile.type | enumLabel }}@if (usesTokenEndpoint(profile.type)) { <span> · {{ profile.tokenEndpointMethod }} {{ profile.tokenEndpointPath }}</span> }<span> · {{ profile.headerName }}</span></p></div>
+            <div class="authentication-overview-actions"><button type="button" class="button button-secondary" (click)="openAuthenticationProfileDetails(version)">View profile</button>@if (canManage()) { <button type="button" class="button button-ghost" (click)="openAuthenticationProfile(version)">Edit</button> }</div>
           } @else {
-            <div class="authentication-profile-empty">
-              <div class="authentication-profile-icon">AUTH</div>
-              <div><strong>No automatic authentication configured</strong><p>Select a strategy and reference environment secret names. Other endpoints can then inherit it automatically.</p></div>
-              @if (canManage()) { <button type="button" class="button button-secondary button-small" (click)="openAuthenticationProfile(version)">Configure authentication</button> }
-            </div>
+            <div class="authentication-overview-copy"><span class="eyebrow">Automatic authentication</span><h2>No profile configured</h2><p>Add a token, credentials, API key, custom headers, or mTLS strategy for inherited endpoints.</p></div>
+            @if (canManage()) { <div class="authentication-overview-actions"><button type="button" class="button button-primary" (click)="openAuthenticationProfile(version)">Configure profile</button></div> }
           }
         </section>
 
@@ -175,9 +153,9 @@
       @if (!editingVersion()) { <label class="field"><span>Initial lifecycle</span><select class="select" formControlName="lifecycleStatus">@for (status of lifecycleStatuses; track status) { <option [value]="status">{{ status }}</option> }</select></label> }
       <label class="field"><span>Release date</span><input class="input" type="date" formControlName="releaseDate"></label>
       <label class="field"><span>Authentication</span><select class="select" formControlName="authenticationType">@for (type of authenticationTypes; track type) { <option [value]="type">{{ type | enumLabel }}</option> }</select></label>
-      <label class="field"><span>Timeout seconds *</span><input class="input" type="number" min="1" max="300" formControlName="timeoutSeconds"></label>
-      <label class="field"><span>Maximum request bytes *</span><input class="input" type="number" min="1" max="50000000" formControlName="maxRequestBytes"></label>
-      <label class="field"><span>Maximum response bytes *</span><input class="input" type="number" min="1" max="100000000" formControlName="maxResponseBytes"></label>
+      <label class="field"><span>Default timeout seconds *</span><input class="input" type="number" min="1" max="300" formControlName="timeoutSeconds"><small>Inherited by endpoints without a timeout override.</small></label>
+      <label class="field"><span>Default maximum request bytes *</span><input class="input" type="number" min="1" max="50000000" formControlName="maxRequestBytes"><small>Inherited by endpoints without a request-size override.</small></label>
+      <label class="field"><span>Default maximum response bytes *</span><input class="input" type="number" min="1" max="100000000" formControlName="maxResponseBytes"><small>Inherited by endpoints without a response-size override.</small></label>
       <label class="field field-span"><span>Authentication instructions</span><textarea class="textarea" rows="3" formControlName="authenticationInstructions" placeholder="How consumers obtain and send credentials"></textarea></label>
       <label class="field field-span"><span>Authentication configuration JSON</span><textarea class="textarea code-input" rows="4" formControlName="authenticationConfigJson" placeholder='{"headerName":"X-API-Key"}'></textarea></label>
       <label class="field field-span"><span>Change log</span><textarea class="textarea" rows="5" formControlName="changeLog" placeholder="Release changes, compatibility notes, and migration guidance"></textarea></label>
@@ -195,6 +173,10 @@
       <label class="field"><span>HTTP method *</span><select class="select" formControlName="httpMethod">@for (method of httpMethods; track method) { <option [value]="method">{{ method }}</option> }</select></label>
       <label class="field"><span>Authentication behavior *</span><select class="select" formControlName="authenticationMode">@for (mode of endpointAuthenticationModes; track mode) { <option [value]="mode">{{ mode | enumLabel }}</option> }</select><small>Inherit uses the release profile; Anonymous skips automatic authentication.</small></label>
       <label class="field field-span"><span>Relative path *</span><input class="input code-input" formControlName="relativePath" placeholder="/customers/{customerId}"></label>
+      <div class="inline-alert info field-span"><strong>Optional execution overrides</strong><span>Leave a field blank to inherit the release default. ApiVault's server safety cap always remains in force.</span></div>
+      <label class="field"><span>Maximum request bytes override</span><input class="input" type="number" min="1" max="50000000" formControlName="maxRequestBytes" [attr.placeholder]="modalVersion()?.maxRequestBytes ?? 1048576"><small>Release default: {{ formatter.byteSize(modalVersion()?.maxRequestBytes || 0) }}</small></label>
+      <label class="field"><span>Maximum response bytes override</span><input class="input" type="number" min="1" max="100000000" formControlName="maxResponseBytes" [attr.placeholder]="modalVersion()?.maxResponseBytes ?? 5242880"><small>Release default: {{ formatter.byteSize(modalVersion()?.maxResponseBytes || 0) }}</small></label>
+      <label class="field"><span>Timeout seconds override</span><input class="input" type="number" min="1" max="300" formControlName="timeoutSeconds" [attr.placeholder]="modalVersion()?.timeoutSeconds ?? 30"><small>Release default: {{ modalVersion()?.timeoutSeconds ?? 30 }} seconds</small></label>
       <label class="field field-span"><span>Description</span><textarea class="textarea" rows="3" formControlName="description"></textarea></label>
       <label class="field"><span>Request headers JSON</span><textarea class="textarea code-input" rows="5" formControlName="requestHeadersJson" placeholder='{"Accept":"application/json"}'></textarea></label>
       <label class="field"><span>Query parameters JSON</span><textarea class="textarea code-input" rows="5" formControlName="queryParametersJson" placeholder='{"includeAccounts":"boolean"}'></textarea></label>
@@ -210,7 +192,37 @@
   </form>
 </app-modal>
 
-<app-modal [open]="authenticationProfileModalOpen()" title="Authentication Profile" eyebrow="Automatic request authentication" [wide]="true" (closed)="closeAuthenticationProfileModal()">
+<app-modal [open]="authenticationProfileDetailsOpen()" title="Authentication profile" eyebrow="Runtime security" [wide]="true" (closed)="closeAuthenticationProfileDetails()">
+  @if (authenticationProfileDetailsVersion(); as version) {
+    @if (version.authenticationProfile; as profile) {
+      <div class="authentication-profile-dialog">
+        <div class="authentication-dialog-hero">
+          <div class="authentication-dialog-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.7 2.9 8.2 7 10 4.1-1.8 7-5.3 7-10V6l-7-3Z"></path><path d="m8.7 12 2.1 2.1 4.6-4.7"></path></svg></div>
+          <div><div class="authentication-dialog-status"><span class="badge" [class]="profile.isEnabled ? 'badge status-active' : 'badge status-retired'">{{ profile.isEnabled ? 'Enabled' : 'Disabled' }}</span><span>Release v{{ version.version }}</span></div><h3>{{ profile.name }}</h3><p>Automatically resolves and applies credentials when an endpoint inherits release authentication.</p></div>
+          @if (canManage()) { <button type="button" class="button button-ghost" (click)="closeAuthenticationProfileDetails(); openAuthenticationProfile(version)">Edit profile</button> }
+        </div>
+
+        <div class="authentication-profile-summary authentication-profile-summary-dialog">
+          <div><span>Strategy</span><strong>{{ profile.type | enumLabel }}</strong></div>
+          <div><span>Request header</span><strong><code>{{ profile.headerName }}</code></strong></div>
+          @if (usesTokenEndpoint(profile.type)) { <div><span>Refresh buffer</span><strong>{{ profile.refreshSkewSeconds }} seconds</strong></div> }
+          @if (usesTokenEndpoint(profile.type)) { <div class="authentication-summary-wide"><span>Token endpoint</span><strong>{{ profile.tokenEndpointMethod }} {{ profile.tokenEndpointPath }}</strong><small>{{ profile.tokenEndpointName }}</small></div> }
+          @if (usesTokenEndpoint(profile.type)) { <div><span>Token field</span><strong><code>{{ profile.tokenJsonPath }}</code></strong></div> }
+        </div>
+
+        <div class="authentication-safety-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.7 2.9 8.2 7 10 4.1-1.8 7-5.3 7-10V6l-7-3Z"></path></svg><div><strong>Credentials remain environment-specific</strong><p>The profile stores strategy settings and secret names only. Encrypted values stay within each environment and are never displayed here.</p></div></div>
+
+        @if (canTest()) {
+          <div class="authentication-test-section"><div><h3>Validate this profile</h3><p>Acquire or resolve credentials against an enabled environment without exposing sensitive values.</p></div><div class="authentication-test-control"><label class="field inline-field"><span>Environment</span><select class="select" #authenticationEnvironment><option value="">Select enabled environment</option>@for (environment of version.environments; track environment.id) { @if (environment.isEnabled) { <option [value]="environment.id">{{ environment.environmentType | enumLabel }} — {{ environment.baseUrl }}</option> } }</select></label><button class="button button-secondary" type="button" [disabled]="!authenticationEnvironment.value || authenticationTesting() || !profile.isEnabled" (click)="testAuthenticationProfile(version, authenticationEnvironment.value)">{{ authenticationTesting() ? 'Testing…' : 'Test authentication' }}</button></div>
+          @if (authenticationTestResult(); as result) { <div class="authentication-test-success"><span class="authentication-success-mark">✓</span><div><strong>Authentication resolved successfully</strong><p>{{ result.summary }}@if (result.expiresAtUtc) { Expires {{ formatDate(result.expiresAtUtc) }}{{ result.fromCache ? ' (cached).' : '.' }} }</p></div></div> }
+          </div>
+        }
+      </div>
+    }
+  }
+</app-modal>
+
+<app-modal [open]="authenticationProfileModalOpen()" [title]="authenticationProfileVersion()?.authenticationProfile ? 'Edit authentication profile' : 'Configure authentication profile'" eyebrow="Automatic request authentication" [wide]="true" (closed)="closeAuthenticationProfileModal()">
   @if (authenticationProfileVersion(); as version) {
     <form class="modal-form" [formGroup]="authenticationProfileForm" (ngSubmit)="saveAuthenticationProfile()">
       <div class="inline-alert info"><strong>Credentials remain environment-specific.</strong><span>This profile stores only strategy settings and secret names. Encrypted secret values stay in each environment.</span></div>

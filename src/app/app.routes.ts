@@ -66,9 +66,20 @@ export const routes: Routes = [
       },
       {
         path: 'admin/reference-data',
+        redirectTo: 'admin/business-areas',
+        pathMatch: 'full'
+      },
+      {
+        path: 'admin/business-areas',
         canActivate: [roleGuard],
         data: { roles: [UserRole.Admin] },
-        loadComponent: () => import('./features/administration/reference-data.component').then((m) => m.ReferenceDataComponent)
+        loadComponent: () => import('./features/administration/business-areas.component').then((m) => m.BusinessAreasComponent)
+      },
+      {
+        path: 'admin/development-teams',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.Admin] },
+        loadComponent: () => import('./features/administration/development-teams.component').then((m) => m.DevelopmentTeamsComponent)
       },
       {
         path: 'admin/users',

@@ -53,6 +53,10 @@ export interface LookupResponse {
   id: string;
   code: string;
   name: string;
+  description?: string | null;
+  contactEmail?: string | null;
+  referenceCount: number;
+  canDelete: boolean;
 }
 
 export interface VendorResponse {
@@ -205,6 +209,9 @@ export interface CreateEndpointRequest {
   successStatusCodesJson?: string | null;
   soapAction?: string | null;
   authenticationMode: EndpointAuthenticationMode;
+  maxRequestBytes?: number | null;
+  maxResponseBytes?: number | null;
+  timeoutSeconds?: number | null;
 }
 
 export interface EndpointResponse extends CreateEndpointRequest {

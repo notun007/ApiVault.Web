@@ -49,6 +49,9 @@ export class TestConsoleComponent {
   readonly environments = computed(() => this.selectedVersion()?.environments ?? []);
   readonly selectedEndpoint = computed(() => this.endpoints().find((endpoint) => endpoint.id === this.selectedEndpointId()) ?? null);
   readonly selectedEnvironment = computed(() => this.environments().find((environment) => environment.id === this.selectedEnvironmentId()) ?? null);
+  readonly effectiveMaxRequestBytes = computed(() => this.selectedEndpoint()?.maxRequestBytes ?? this.selectedVersion()?.maxRequestBytes ?? 0);
+  readonly effectiveMaxResponseBytes = computed(() => this.selectedEndpoint()?.maxResponseBytes ?? this.selectedVersion()?.maxResponseBytes ?? 0);
+  readonly effectiveTimeoutSeconds = computed(() => this.selectedEndpoint()?.timeoutSeconds ?? this.selectedVersion()?.timeoutSeconds ?? 30);
 
   readonly tabs = [
     { id: 'path', label: 'Path', count: () => this.enabledCount(this.pathRows) },
@@ -87,7 +90,8 @@ export class TestConsoleComponent {
     this.resetRequest(false);
     const version = this.versions().find((item) => item.id === versionId);
     if (!version) return;
-    const endpoint = version.endpoints[0];
+    const tokenEndpointId = version.authenticationProfile?.tokenEndpointId;
+    const endpoint = version.endpoints.find((item) => item.id !== tokenEndpointId) ?? version.endpoints[0];
     const environment = version.environments.find((item) => item.isEnabled);
     if (endpoint) { this.selectedEndpointId.set(endpoint.id); this.selectEndpoint(endpoint.id); }
     if (environment) this.selectedEnvironmentId.set(environment.id);
