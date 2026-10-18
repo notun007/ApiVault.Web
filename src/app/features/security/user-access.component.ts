@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
 import { readProblem } from '../../core/http/error.interceptor';
-import { UserAccessResponse, RoleResponse } from '../../core/models/security.models';
+import { RoleResponse, UserAccessResponse } from '../../core/models/security.models';
 import { AdminClient } from '../../core/services/admin.client';
 import { SecurityClient } from '../../core/services/security.client';
 import { ToastService } from '../../core/services/toast.service';
@@ -61,7 +61,7 @@ export class UserAccessComponent {
 
   save(): void {
     const userId = this.selectedUserId();
-    if (!userId || this.selectedRoleIds().length === 0 || this.saving()) return;
+    if (!userId || !this.selectedRoleIds().length || this.saving()) return;
     this.saving.set(true);
     this.admin.updateUserRoles(userId, { roleIds: this.selectedRoleIds() }).subscribe({
       next: () => {

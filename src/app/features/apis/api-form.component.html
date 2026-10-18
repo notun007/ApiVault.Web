@@ -21,7 +21,7 @@
     @if (selectedApplication(); as application) {
       <div class="inline-alert info application-summary">
         <strong>{{ application.name }}</strong>
-        <span>{{ application.businessArea }} · {{ application.ownerTeam }} · {{ application.ownershipType === 'ThirdParty' ? 'Third Party' : 'Internal' }}@if (application.vendorName) { · {{ application.vendorName }} }</span>
+        <span>{{ application.businessArea }} · {{ application.ownershipType === 'ThirdParty' ? 'Third Party' : 'Internal' }}@if (application.vendorName) { · {{ application.vendorName }} }</span>
       </div>
     }
 

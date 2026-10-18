@@ -116,9 +116,79 @@ export interface UpdateRolePermissionsRequest {
   permissions: RolePermissionResponse[];
 }
 
+export interface ApiAccessCatalogApplicationResponse {
+  id: string;
+  code: string;
+  name: string;
+  apis: ApiAccessCatalogApiResponse[];
+}
+
+export interface ApiAccessCatalogApiResponse {
+  id: string;
+  name: string;
+  releases: ApiAccessCatalogReleaseResponse[];
+}
+
+export interface ApiAccessCatalogReleaseResponse {
+  id: string;
+  version: string;
+  releaseName?: string | null;
+  lifecycleStatus: string;
+  endpoints: ApiAccessCatalogEndpointResponse[];
+  environments: ApiAccessCatalogEnvironmentResponse[];
+}
+
+export interface ApiAccessCatalogEndpointResponse {
+  id: string;
+  name: string;
+  httpMethod: string;
+  relativePath: string;
+}
+
+export interface ApiAccessCatalogEnvironmentResponse {
+  id: string;
+  environmentType: string;
+  isEnabled: boolean;
+}
+
+export interface UserApiAccessGrantResponse {
+  id: string;
+  userId: string;
+  applicationId: string;
+  applicationCode: string;
+  applicationName: string;
+  apiAssetId: string;
+  apiName: string;
+  apiVersionId: string;
+  apiVersion: string;
+  apiEndpointId: string;
+  endpointName: string;
+  httpMethod: string;
+  relativePath: string;
+  apiEnvironmentId: string;
+  environmentType: string;
+  canRead: boolean;
+  canCreate: boolean;
+  canEdit: boolean;
+}
+
+export interface SaveUserApiAccessGrantRequest {
+  applicationId: string;
+  apiAssetId: string;
+  apiVersionId: string;
+  apiEndpointId: string;
+  apiEnvironmentId: string;
+  canRead: boolean;
+  canCreate: boolean;
+  canEdit: boolean;
+}
+
+export interface SaveUserApiAccessRequest {
+  grants: SaveUserApiAccessGrantRequest[];
+}
+
 export interface CreateLookupRequest {
   code: string;
   name: string;
   description?: string | null;
-  contactEmail?: string | null;
 }

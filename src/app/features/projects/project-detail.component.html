@@ -5,9 +5,8 @@
     @if (canManage()) { <button class="button button-primary" type="button" (click)="openLink()">+ Link API version</button> }
   </app-page-header>
 
-  <section class="identity-strip four-up">
+  <section class="identity-strip three-up">
     <div><span>Business area</span><strong>{{ item.businessArea }}</strong></div>
-    <div><span>Owner team</span><strong>{{ item.ownerTeam }}</strong></div>
     <div><span>Criticality</span><strong><span class="badge" [class]="'badge criticality-' + item.criticality.toLowerCase()">{{ item.criticality }}</span></strong></div>
     <div><span>Status</span><strong><span class="badge" [class]="'badge status-' + item.status.toLowerCase()">{{ item.status }}</span></strong></div>
   </section>

@@ -9,11 +9,9 @@ import {
   ApiCatalogSortField,
   ApiSearchQuery,
   ApiSummaryResponse,
-  LookupResponse,
   PagedResult
 } from '../../core/models/api.models';
 import { UserRole } from '../../core/models/security.models';
-import { AdminClient } from '../../core/services/admin.client';
 import { ApiCatalogClient } from '../../core/services/api-catalog.client';
 import { ProjectSummaryResponse } from '../../core/models/project.models';
 import { ProjectClient } from '../../core/services/project.client';
@@ -32,13 +30,11 @@ export class ApiListComponent {
   private readonly fb = inject(FormBuilder);
   private readonly apiClient = inject(ApiCatalogClient);
   private readonly projectClient = inject(ProjectClient);
-  private readonly adminClient = inject(AdminClient);
   private readonly auth = inject(AuthService);
 
   readonly ownershipTypes = Object.values(ApiOwnershipType);
   readonly protocols = Object.values(ApiProtocol);
   readonly lifecycleStatuses = Object.values(ApiLifecycleStatus);
-  readonly teams = signal<LookupResponse[]>([]);
   readonly applications = signal<ProjectSummaryResponse[]>([]);
   readonly loading = signal(true);
   readonly filtersExpanded = signal(false);
@@ -54,12 +50,10 @@ export class ApiListComponent {
     ownershipType: '',
     protocol: '',
     lifecycleStatus: '',
-    developmentTeamId: '',
     publishingApplicationId: ''
   });
 
   constructor() {
-    this.adminClient.getDevelopmentTeams().subscribe((items) => this.teams.set(items));
     this.projectClient.getAll(true).subscribe((items) => this.applications.set(items));
     this.search(1);
   }
@@ -72,7 +66,6 @@ export class ApiListComponent {
       ownershipType: filters.ownershipType as ApiOwnershipType | '',
       protocol: filters.protocol as ApiProtocol | '',
       lifecycleStatus: filters.lifecycleStatus as ApiLifecycleStatus | '',
-      developmentTeamId: filters.developmentTeamId,
       publishingApplicationId: filters.publishingApplicationId,
       sortBy: this.sortBy(),
       sortDescending: this.sortDescending(),

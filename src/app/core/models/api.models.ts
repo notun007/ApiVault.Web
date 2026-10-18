@@ -54,7 +54,6 @@ export interface LookupResponse {
   code: string;
   name: string;
   description?: string | null;
-  contactEmail?: string | null;
   referenceCount: number;
   canDelete: boolean;
 }
@@ -99,7 +98,6 @@ export interface ApiSearchQuery {
   protocol?: ApiProtocol | '';
   lifecycleStatus?: ApiLifecycleStatus | '';
   businessAreaId?: string;
-  developmentTeamId?: string;
   publishingApplicationId?: string;
   sortBy?: ApiCatalogSortField;
   sortDescending?: boolean;
@@ -123,7 +121,6 @@ export interface ApiSummaryResponse {
   ownershipType: ApiOwnershipType;
   protocol: ApiProtocol;
   businessArea: string;
-  developmentTeam: string;
   currentVersion?: string | null;
   currentLifecycleStatus?: ApiLifecycleStatus | null;
   versionCount: number;
@@ -142,7 +139,6 @@ export interface ApiDetailResponse {
   vendorName?: string | null;
   externalReferenceUrl?: string | null;
   businessArea: LookupResponse;
-  developmentTeam: LookupResponse;
   versions: ApiVersionResponse[];
 }
 

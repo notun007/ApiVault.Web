@@ -76,12 +76,6 @@ export const routes: Routes = [
         loadComponent: () => import('./features/administration/business-areas.component').then((m) => m.BusinessAreasComponent)
       },
       {
-        path: 'admin/development-teams',
-        canActivate: [roleGuard],
-        data: { roles: [UserRole.Admin] },
-        loadComponent: () => import('./features/administration/development-teams.component').then((m) => m.DevelopmentTeamsComponent)
-      },
-      {
         path: 'admin/users',
         canActivate: [roleGuard],
         data: { roles: [UserRole.Admin] },
@@ -104,6 +98,12 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: [UserRole.Admin] },
         loadComponent: () => import('./features/security/user-access.component').then((m) => m.UserAccessComponent)
+      },
+      {
+        path: 'admin/security/api-access',
+        canActivate: [roleGuard],
+        data: { roles: [UserRole.Admin] },
+        loadComponent: () => import('./features/security/api-access.component').then((m) => m.ApiAccessComponent)
       },
       {
         path: 'admin/security/roles',

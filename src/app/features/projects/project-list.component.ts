@@ -33,7 +33,6 @@ export class ProjectListComponent {
 
   readonly applications = signal<ProjectSummaryResponse[]>([]);
   readonly businessAreas = signal<LookupResponse[]>([]);
-  readonly teams = signal<LookupResponse[]>([]);
   readonly vendors = signal<VendorResponse[]>([]);
   readonly editing = signal<ProjectSummaryResponse | null>(null);
   readonly loading = signal(true);
@@ -55,7 +54,7 @@ export class ProjectListComponent {
   readonly filteredApplications = computed(() => {
     const search = this.searchText().trim().toLowerCase();
     return this.applications().filter((application) => {
-      const values = [application.code, application.name, application.businessArea, application.ownerTeam, application.vendorName ?? ''];
+      const values = [application.code, application.name, application.businessArea, application.vendorName ?? ''];
       return (!search || values.some((value) => value.toLowerCase().includes(search)))
         && (!this.statusFilter() || application.status === this.statusFilter())
         && (!this.ownershipFilter() || application.ownershipType === this.ownershipFilter());
@@ -87,7 +86,6 @@ export class ProjectListComponent {
     code: ['', [Validators.required, Validators.maxLength(50)]],
     name: ['', [Validators.required, Validators.maxLength(200)]],
     businessAreaId: ['', Validators.required],
-    ownerTeamId: ['', Validators.required],
     ownershipType: [ApiOwnershipType.Internal, Validators.required],
     vendorId: [''],
     criticality: [ProjectCriticality.Medium, Validators.required],
@@ -98,7 +96,6 @@ export class ProjectListComponent {
   constructor() {
     this.load();
     this.admin.getBusinessAreas().subscribe((items) => this.businessAreas.set(items));
-    this.admin.getDevelopmentTeams().subscribe((items) => this.teams.set(items));
     this.admin.getVendors(true).subscribe((items) => this.vendors.set(items));
   }
 
@@ -113,7 +110,7 @@ export class ProjectListComponent {
   openCreate(): void {
     this.editing.set(null);
     this.form.reset({
-      code: '', name: '', businessAreaId: '', ownerTeamId: '', ownershipType: ApiOwnershipType.Internal,
+      code: '', name: '', businessAreaId: '', ownershipType: ApiOwnershipType.Internal,
       vendorId: '', criticality: ProjectCriticality.Medium, status: ProjectStatus.Active, description: ''
     });
     this.modalError.set('');
@@ -128,7 +125,6 @@ export class ProjectListComponent {
       code: application.code,
       name: application.name,
       businessAreaId: application.businessAreaId ?? '',
-      ownerTeamId: application.ownerTeamId ?? '',
       ownershipType: application.ownershipType,
       vendorId: application.vendorId ?? '',
       criticality: application.criticality,

@@ -20,7 +20,6 @@ export interface CreateProjectRequest {
   criticality: ProjectCriticality;
   status: ProjectStatus;
   businessAreaId: string;
-  ownerTeamId: string;
   ownershipType: ApiOwnershipType;
   vendorId?: string | null;
 }
@@ -39,9 +38,7 @@ export interface ProjectSummaryResponse {
   criticality: ProjectCriticality;
   status: ProjectStatus;
   businessArea: string;
-  ownerTeam: string;
   businessAreaId?: string | null;
-  ownerTeamId?: string | null;
   ownershipType: ApiOwnershipType;
   vendorId?: string | null;
   vendorName?: string | null;

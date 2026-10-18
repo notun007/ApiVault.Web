@@ -3,7 +3,7 @@
 </app-page-header>
 
 <section class="panel filter-panel compact-filter">
-  <label class="field"><span>Find application</span><input class="input" [value]="searchText()" (input)="updateSearch($any($event.target).value)" placeholder="Search name, code, business, team, or vendor"></label>
+  <label class="field"><span>Find application</span><input class="input" [value]="searchText()" (input)="updateSearch($any($event.target).value)" placeholder="Search name, code, business, or vendor"></label>
   <label class="field"><span>Status</span><select class="select" [value]="statusFilter()" (change)="updateStatusFilter($any($event.target).value)"><option value="">All statuses</option>@for (status of statuses; track status) { <option [value]="status">{{ status | enumLabel }}</option> }</select></label>
   <label class="field"><span>Ownership</span><select class="select" [value]="ownershipFilter()" (change)="updateOwnershipFilter($any($event.target).value)"><option value="">All ownership</option>@for (type of ownershipTypes; track type) { <option [value]="type">{{ type === 'ThirdParty' ? 'Third Party' : 'Internal' }}</option> }</select></label>
 </section>
@@ -56,7 +56,6 @@
       <label class="field"><span>Application code *</span><input class="input code-input" formControlName="code" placeholder="e.g. CBS"></label>
       <label class="field"><span>Application name *</span><input class="input" formControlName="name" placeholder="e.g. Core Banking System"></label>
       <label class="field"><span>Business area *</span><select class="select" formControlName="businessAreaId"><option value="">Select business area</option>@for (item of businessAreas(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select></label>
-      <label class="field"><span>Owner team *</span><select class="select" formControlName="ownerTeamId"><option value="">Select owner team</option>@for (item of teams(); track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select></label>
       <label class="field"><span>Ownership *</span><select class="select" formControlName="ownershipType">@for (type of ownershipTypes; track type) { <option [value]="type">{{ type === 'ThirdParty' ? 'Third Party' : 'Internal' }}</option> }</select></label>
       @if (form.controls.ownershipType.value === 'ThirdParty') { <label class="field"><span>Vendor company *</span><select class="select" formControlName="vendorId"><option value="">Select vendor</option>@for (vendor of vendors(); track vendor.id) { <option [value]="vendor.id">{{ vendor.name }} ({{ vendor.code }})</option> }</select></label> }
       <label class="field"><span>Criticality</span><select class="select" formControlName="criticality">@for (level of criticalities; track level) { <option [value]="level">{{ level }}</option> }</select></label>

@@ -3,10 +3,13 @@ import { inject, Injectable } from '@angular/core';
 import { AppConfigService } from '../config/app-config.service';
 import {
   CreateRoleRequest,
+  ApiAccessCatalogApplicationResponse,
   PermissionResponse,
   RolePermissionResponse,
   RoleResponse,
   SecurityScreenResponse,
+  SaveUserApiAccessRequest,
+  UserApiAccessGrantResponse,
   UpdateRolePermissionsRequest
 } from '../models/security.models';
 
@@ -22,4 +25,7 @@ export class SecurityClient {
   getScreens() { return this.http.get<SecurityScreenResponse[]>(this.runtime.apiUrl('/api/security/screens')); }
   getRolePermissions(roleId: string) { return this.http.get<RolePermissionResponse[]>(this.runtime.apiUrl(`/api/security/roles/${roleId}/permissions`)); }
   updateRolePermissions(roleId: string, request: UpdateRolePermissionsRequest) { return this.http.put<void>(this.runtime.apiUrl(`/api/security/roles/${roleId}/permissions`), request); }
+  getApiAccessCatalog() { return this.http.get<ApiAccessCatalogApplicationResponse[]>(this.runtime.apiUrl('/api/security/api-access/catalog')); }
+  getUserApiAccess(userId: string) { return this.http.get<UserApiAccessGrantResponse[]>(this.runtime.apiUrl(`/api/security/users/${userId}/api-access`)); }
+  updateUserApiAccess(userId: string, request: SaveUserApiAccessRequest) { return this.http.put<void>(this.runtime.apiUrl(`/api/security/users/${userId}/api-access`), request); }
 }

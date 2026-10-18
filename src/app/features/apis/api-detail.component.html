@@ -7,11 +7,10 @@
     @if (canManage()) { <a class="button button-ghost" [routerLink]="['/apis', item.id, 'edit']">Edit API</a><button class="button button-primary" type="button" (click)="openCreateVersion()">+ Add release</button> }
   </app-page-header>
 
-  <section class="identity-strip">
+  <section class="identity-strip five-up">
     <div><span>Ownership</span><strong>{{ item.ownershipType | enumLabel }}</strong></div>
     <div><span>API type</span><strong>{{ item.protocol | enumLabel }}</strong></div>
     <div><span>Business</span><strong>{{ item.businessArea.name }}</strong></div>
-    <div><span>Development team</span><strong>{{ item.developmentTeam.name }}</strong></div>
     <div><span>Creator</span><strong>{{ item.creatorName }}</strong><small>{{ item.creatorEmail || 'No email' }}</small></div>
     <div><span>Vendor</span><strong>{{ item.vendorName || 'In-house' }}</strong></div>
   </section>
@@ -68,37 +67,6 @@
           }
         </section>
 
-        <section class="panel authentication-overview" [class.authentication-overview-disabled]="version.authenticationProfile && !version.authenticationProfile.isEnabled">
-          <div class="authentication-overview-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.7 2.9 8.2 7 10 4.1-1.8 7-5.3 7-10V6l-7-3Z"></path><path d="m8.7 12 2.1 2.1 4.6-4.7"></path></svg></div>
-          @if (version.authenticationProfile; as profile) {
-            <div class="authentication-overview-copy"><span class="eyebrow">Automatic authentication</span><div class="authentication-overview-title"><h2>{{ profile.name }}</h2><span class="badge" [class]="profile.isEnabled ? 'badge status-active' : 'badge status-retired'">{{ profile.isEnabled ? 'Enabled' : 'Disabled' }}</span></div><p>{{ profile.type | enumLabel }}@if (usesTokenEndpoint(profile.type)) { <span> · {{ profile.tokenEndpointMethod }} {{ profile.tokenEndpointPath }}</span> }<span> · {{ profile.headerName }}</span></p></div>
-            <div class="authentication-overview-actions"><button type="button" class="button button-secondary" (click)="openAuthenticationProfileDetails(version)">View profile</button>@if (canManage()) { <button type="button" class="button button-ghost" (click)="openAuthenticationProfile(version)">Edit</button> }</div>
-          } @else {
-            <div class="authentication-overview-copy"><span class="eyebrow">Automatic authentication</span><h2>No profile configured</h2><p>Add a token, credentials, API key, custom headers, or mTLS strategy for inherited endpoints.</p></div>
-            @if (canManage()) { <div class="authentication-overview-actions"><button type="button" class="button button-primary" (click)="openAuthenticationProfile(version)">Configure profile</button></div> }
-          }
-        </section>
-
-        <section class="panel">
-          <header class="panel-header"><div><span class="eyebrow">Release usage</span><h2>Consuming applications</h2><p>Applications and systems linked to this exact API release.</p></div><span class="count-pill large">{{ version.consumers.length }}</span></header>
-          @if (version.consumers.length === 0) {
-            <app-empty-state symbol="CA" title="No consuming applications" message="No application has linked this exact release as a dependency."></app-empty-state>
-          } @else {
-            <div class="consumer-grid">
-              @for (consumer of version.consumers; track consumer.linkId) {
-                <article class="consumer-card">
-                  <header>
-                    <div><span class="eyebrow">{{ consumer.projectCode }}</span><h3>{{ consumer.projectName }}</h3></div>
-                    <span class="badge" [class]="consumer.isRequired ? 'badge consumer-required' : 'badge consumer-optional'">{{ consumer.isRequired ? 'Required' : 'Optional' }}</span>
-                  </header>
-                  <p>{{ consumer.purpose || 'No usage purpose has been recorded.' }}</p>
-                  <footer><a class="button button-ghost button-small" [routerLink]="['/projects', consumer.projectId]">Open application</a></footer>
-                </article>
-              }
-            </div>
-          }
-        </section>
-
         <section class="panel">
           <header class="panel-header"><div><span class="eyebrow">Interface contract</span><h2>Endpoints</h2><p>Relative paths, methods, schemas, samples, and SOAP actions.</p></div>@if (canManage()) { <button type="button" class="button button-primary button-small" (click)="openEndpoint(version)">+ Add endpoint</button> }</header>
           @if (version.endpoints.length === 0) {
@@ -137,6 +105,37 @@
         <section class="detail-columns">
           <article class="panel"><header class="panel-header"><div><span class="eyebrow">Access guidance</span><h2>Authentication</h2></div></header><dl class="detail-list"><div><dt>Method</dt><dd>{{ version.authenticationType | enumLabel }}</dd></div><div><dt>Instructions</dt><dd class="pre-wrap">{{ version.authenticationInstructions || 'No instructions supplied.' }}</dd></div><div><dt>Configuration</dt><dd><pre>{{ formatter.prettyJson(version.authenticationConfigJson) || 'No configuration JSON.' }}</pre></dd></div></dl></article>
           <article class="panel"><header class="panel-header"><div><span class="eyebrow">Release evidence</span><h2>Change log</h2></div></header><div class="prose-box">{{ version.changeLog || 'No change log supplied for this release.' }}</div>@if (version.deprecatedAtUtc) { <div class="timeline-note"><span>Deprecated</span><strong>{{ formatDate(version.deprecatedAtUtc) }}</strong></div> }@if (version.retiredAtUtc) { <div class="timeline-note"><span>Retired</span><strong>{{ formatDate(version.retiredAtUtc) }}</strong></div> }</article>
+        </section>
+
+        <section class="panel authentication-overview" [class.authentication-overview-disabled]="version.authenticationProfile && !version.authenticationProfile.isEnabled">
+          <div class="authentication-overview-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.7 2.9 8.2 7 10 4.1-1.8 7-5.3 7-10V6l-7-3Z"></path><path d="m8.7 12 2.1 2.1 4.6-4.7"></path></svg></div>
+          @if (version.authenticationProfile; as profile) {
+            <div class="authentication-overview-copy"><span class="eyebrow">Automatic authentication</span><div class="authentication-overview-title"><h2>{{ profile.name }}</h2><span class="badge" [class]="profile.isEnabled ? 'badge status-active' : 'badge status-retired'">{{ profile.isEnabled ? 'Enabled' : 'Disabled' }}</span></div><p>{{ profile.type | enumLabel }}@if (usesTokenEndpoint(profile.type)) { <span> · {{ profile.tokenEndpointMethod }} {{ profile.tokenEndpointPath }}</span> }<span> · {{ profile.headerName }}</span></p></div>
+            <div class="authentication-overview-actions"><button type="button" class="button button-secondary" (click)="openAuthenticationProfileDetails(version)">View profile</button>@if (canManage()) { <button type="button" class="button button-ghost" (click)="openAuthenticationProfile(version)">Edit</button> }</div>
+          } @else {
+            <div class="authentication-overview-copy"><span class="eyebrow">Automatic authentication</span><h2>No profile configured</h2><p>Add a token, credentials, API key, custom headers, or mTLS strategy for inherited endpoints.</p></div>
+            @if (canManage()) { <div class="authentication-overview-actions"><button type="button" class="button button-primary" (click)="openAuthenticationProfile(version)">Configure profile</button></div> }
+          }
+        </section>
+
+        <section class="panel">
+          <header class="panel-header"><div><span class="eyebrow">Release usage</span><h2>Consuming applications</h2><p>Applications and systems linked to this exact API release.</p></div><span class="count-pill large">{{ version.consumers.length }}</span></header>
+          @if (version.consumers.length === 0) {
+            <app-empty-state symbol="CA" title="No consuming applications" message="No application has linked this exact release as a dependency."></app-empty-state>
+          } @else {
+            <div class="consumer-grid">
+              @for (consumer of version.consumers; track consumer.linkId) {
+                <article class="consumer-card">
+                  <header>
+                    <div><span class="eyebrow">{{ consumer.projectCode }}</span><h3>{{ consumer.projectName }}</h3></div>
+                    <span class="badge" [class]="consumer.isRequired ? 'badge consumer-required' : 'badge consumer-optional'">{{ consumer.isRequired ? 'Required' : 'Optional' }}</span>
+                  </header>
+                  <p>{{ consumer.purpose || 'No usage purpose has been recorded.' }}</p>
+                  <footer><a class="button button-ghost button-small" [routerLink]="['/projects', consumer.projectId]">Open application</a></footer>
+                </article>
+              }
+            </div>
+          }
         </section>
       } @else {
         <section class="panel"><app-empty-state symbol="V" title="Select a version" message="Choose a release to inspect endpoints, environments, authentication, and documentation."></app-empty-state></section>

@@ -1,0 +1,109 @@
+<app-page-header title="API access" eyebrow="Security administration" description="Control which applications, API releases, endpoints, and environments each user can access.">
+  <label class="user-picker"><span>User</span><select class="select" [value]="selectedUserId()" (change)="selectUser($any($event.target).value)">
+    @for (user of users(); track user.userId) { <option [value]="user.userId">{{ user.displayName }} ({{ user.username }})</option> }
+  </select></label>
+</app-page-header>
+
+@if (errorMessage()) { <div class="inline-alert error">{{ errorMessage() }}</div> }
+
+@if (loading()) {
+  <section class="panel"><div class="table-loading">Loading user access…</div></section>
+} @else if (!users().length) {
+  <section class="panel"><app-empty-state symbol="UA" title="No users found" message="Create a user before assigning API access."></app-empty-state></section>
+} @else {
+  <nav class="access-tabs" aria-label="User access workflow">
+    <button type="button" [class.active]="view() === 'assignments'" (click)="setView('assignments')"><span>1</span> Assignments</button>
+    <button type="button" [class.active]="view() === 'scope'" (click)="setView('scope')"><span>2</span> Add or edit scope</button>
+    <button type="button" [class.active]="view() === 'effective'" (click)="setView('effective')"><span>3</span> Effective access</button>
+  </nav>
+
+  @if (view() === 'assignments') {
+    <section class="access-summary" aria-label="Access summary">
+      <div class="identity-summary"><span class="summary-avatar">{{ selectedUser()?.displayName?.slice(0, 2)?.toUpperCase() }}</span><div><small>Selected user</small><strong>{{ selectedUser()?.displayName }}</strong><p>{{ selectedUser()?.username }} · {{ selectedUser()?.isActive ? 'Active' : 'Inactive' }}</p></div></div>
+      <div><small>Applications</small><strong>{{ applicationSummaries().length }}</strong></div>
+      <div><small>API releases</small><strong>{{ uniqueReleaseCount() }}</strong></div>
+      <div><small>Environments</small><strong>{{ uniqueEnvironmentCount() }}</strong></div>
+    </section>
+
+    <section class="panel">
+      <header class="panel-header"><div><h2>API access assignments</h2><p>Each application can contain multiple APIs, releases, endpoints, and environments.</p></div><button class="button button-primary" type="button" [disabled]="!catalog().length" (click)="openScope()">+ Add access</button></header>
+      @if (loadingGrants()) {
+        <div class="table-loading">Loading API access…</div>
+      } @else if (!applicationSummaries().length) {
+        <app-empty-state symbol="AP" title="No API access assigned" message="Add an application scope to give this user access to exact API resources."></app-empty-state>
+      } @else {
+        <div class="table-wrap"><table class="access-table"><thead><tr><th>Application</th><th>Scope</th><th>Environments</th><th>Permissions</th><th><span class="sr-only">Actions</span></th></tr></thead><tbody>
+          @for (item of applicationSummaries(); track item.applicationId) {
+            <tr><td><div class="application-cell"><span class="application-mark">{{ item.applicationCode.slice(0, 2) }}</span><div><strong>{{ item.applicationName }}</strong><small>{{ item.applicationCode }}</small></div></div></td>
+              <td><strong>{{ item.apiCount }} APIs</strong><small>{{ item.releaseCount }} releases · {{ item.endpointCount }} endpoints</small></td>
+              <td><div class="chip-list">@for (environment of item.environments; track environment) { <span class="chip">{{ environment }}</span> }</div></td>
+              <td><div class="chip-list"><span class="permission read">Read</span>@if (item.canCreate) { <span class="permission create">Create</span> }@if (item.canEdit) { <span class="permission edit">Edit</span> }</div></td>
+              <td><div class="row-actions"><button class="icon-button" type="button" title="Edit access" (click)="openScope(item.applicationId)">✎</button><button class="icon-button danger" type="button" title="Remove access" (click)="removeApplicationAccess(item.applicationId)">×</button></div></td></tr>
+          }
+        </tbody></table></div>
+      }
+    </section>
+  }
+
+  @if (view() === 'scope') {
+    <div class="scope-layout">
+      <aside class="panel application-rail">
+        <header><h2>Applications</h2><p>{{ selectedUser()?.displayName }}</p></header>
+        <div class="application-list">
+          @for (application of catalog(); track application.id) {
+            <button type="button" [class.active]="selectedApplicationId() === application.id" (click)="chooseApplication(application.id)"><span class="application-mark">{{ application.code.slice(0, 2) }}</span><span><strong>{{ application.name }}</strong><small>{{ application.apis.length }} APIs</small></span></button>
+          }
+        </div>
+      </aside>
+
+      <section class="panel scope-editor">
+        <header class="scope-header"><div><small>Application scope</small><h2>{{ selectedApplication()?.name || 'Select an application' }}</h2><p>Selections cascade from API registry to its available environments.</p></div><div class="scope-actions"><button class="button" type="button" (click)="setView('assignments')">Cancel</button><button class="button button-primary" type="button" [disabled]="!canSaveScope() || savingAccess()" (click)="saveScope()">{{ savingAccess() ? 'Saving…' : 'Save access' }}</button></div></header>
+
+        <div class="selection-progress">
+          <div class="complete"><span>1</span><small>Application</small><strong>{{ selectedApplication()?.code || '—' }}</strong></div>
+          <div [class.complete]="selectedApiIds().length"><span>2</span><small>APIs</small><strong>{{ selectedApiIds().length }} selected</strong></div>
+          <div [class.complete]="selectedReleaseIds().length"><span>3</span><small>Releases</small><strong>{{ selectedReleaseIds().length }} selected</strong></div>
+          <div [class.complete]="selectedEndpointIds().length && selectedEnvironmentIds().length"><span>4</span><small>Resources</small><strong>{{ selectedEndpointIds().length }} endpoints · {{ selectedEnvironmentIds().length }} env.</strong></div>
+        </div>
+
+        <div class="scope-grid">
+          <fieldset><legend>API catalog / registry <em>multiple</em></legend><div class="choice-box">
+            @for (api of availableApis(); track api.id) { <label class="scope-choice" [class.selected]="includes(selectedApiIds(), api.id)"><input type="checkbox" [checked]="includes(selectedApiIds(), api.id)" (change)="toggleApi(api.id)"><span><strong>{{ api.name }}</strong><small>{{ api.releases.length }} releases</small></span></label> }
+            @if (!availableApis().length) { <p class="empty-choice">No published APIs are available for this application.</p> }
+          </div></fieldset>
+
+          <fieldset [disabled]="!selectedApiIds().length"><legend>API releases <em>multiple</em></legend><div class="choice-box">
+            @for (release of availableReleases(); track release.id) { <label class="scope-choice" [class.selected]="includes(selectedReleaseIds(), release.id)"><input type="checkbox" [checked]="includes(selectedReleaseIds(), release.id)" (change)="toggleRelease(release.id)"><span><strong>{{ apiNameForRelease(release.id) }} · {{ release.version }}</strong><small>{{ release.releaseName || release.lifecycleStatus }}</small></span></label> }
+            @if (!availableReleases().length) { <p class="empty-choice">Select one or more APIs first.</p> }
+          </div></fieldset>
+
+          <fieldset [disabled]="!selectedReleaseIds().length"><legend>Endpoints <em>multiple</em></legend><div class="choice-box tall">
+            @for (endpoint of availableEndpoints(); track endpoint.id) { <label class="scope-choice endpoint-choice" [class.selected]="includes(selectedEndpointIds(), endpoint.id)"><input type="checkbox" [checked]="includes(selectedEndpointIds(), endpoint.id)" (change)="toggleEndpoint(endpoint.id)"><span><strong><b class="method">{{ endpoint.httpMethod }}</b> {{ endpoint.relativePath }}</strong><small>{{ endpoint.releaseVersion }} · {{ endpoint.name }}</small></span></label> }
+            @if (!availableEndpoints().length) { <p class="empty-choice">Select one or more releases first.</p> }
+          </div></fieldset>
+
+          <fieldset [disabled]="!selectedReleaseIds().length"><legend>Environments <em>multiple, per release</em></legend><div class="choice-box tall">
+            @for (environment of availableEnvironments(); track environment.id) { <label class="scope-choice" [class.selected]="includes(selectedEnvironmentIds(), environment.id)" [class.disabled-choice]="!environment.isEnabled"><input type="checkbox" [disabled]="!environment.isEnabled" [checked]="includes(selectedEnvironmentIds(), environment.id)" (change)="toggleEnvironment(environment.id)"><span><strong>{{ environmentLabel(environment) }}</strong><small>Release {{ environment.releaseVersion }}</small></span></label> }
+            @if (!availableEnvironments().length) { <p class="empty-choice">Selected releases have no environments.</p> }
+          </div></fieldset>
+        </div>
+
+        <div class="permission-editor"><div><h3>Allowed actions</h3><p>Read is always required. Create and Edit can be added independently.</p></div><label><input type="checkbox" checked disabled><span>Read</span></label><label><input type="checkbox" [checked]="canCreate()" (change)="canCreate.set($any($event.target).checked)"><span>Create</span></label><label><input type="checkbox" [checked]="canEdit()" (change)="canEdit.set($any($event.target).checked)"><span>Edit</span></label></div>
+        @if (selectedEndpointIds().length && !canSaveScope()) { <div class="scope-warning">Select at least one enabled environment for every release containing a selected endpoint.</div> }
+      </section>
+    </div>
+  }
+
+  @if (view() === 'effective') {
+    <div class="effective-layout">
+      <aside class="panel effective-filter"><header><h2>Filter access</h2><p>{{ selectedUser()?.displayName }}</p></header><button type="button" [class.active]="!effectiveApplicationId()" (click)="setEffectiveApplication('')">All applications <span>{{ applicationSummaries().length }}</span></button>@for (item of applicationSummaries(); track item.applicationId) { <button type="button" [class.active]="effectiveApplicationId() === item.applicationId" (click)="setEffectiveApplication(item.applicationId)">{{ item.applicationName }} <span>{{ item.endpointCount }}</span></button> }</aside>
+      <section class="panel">
+        <header class="panel-header"><div><h2>Effective access</h2><p>Final endpoint permissions after application, release, and environment scope are combined.</p></div><button class="button" type="button" (click)="setView('scope')">Edit access</button></header>
+        @if (!effectiveGrants().length) { <app-empty-state symbol="EA" title="No effective access" message="No API resource grants match the current selection."></app-empty-state> }
+        @else { <div class="table-wrap"><table class="access-table effective-table"><thead><tr><th>Resource path</th><th>Application / API / release</th><th>Environment</th><th>Read</th><th>Create</th><th>Edit</th></tr></thead><tbody>
+          @for (grant of effectiveGrants(); track grant.id) { <tr><td><strong><b class="method">{{ grant.httpMethod }}</b> {{ grant.relativePath }}</strong><small>{{ grant.endpointName }}</small></td><td><strong>{{ grant.applicationName }}</strong><small>{{ grant.apiName }} · {{ grant.apiVersion }}</small></td><td><span class="chip">{{ grant.environmentType }}</span></td><td><span class="permission-dot on">✓</span></td><td><span class="permission-dot" [class.on]="grant.canCreate">{{ grant.canCreate ? '✓' : '—' }}</span></td><td><span class="permission-dot" [class.on]="grant.canEdit">{{ grant.canEdit ? '✓' : '—' }}</span></td></tr> }
+        </tbody></table></div> }
+      </section>
+    </div>
+  }
+}
