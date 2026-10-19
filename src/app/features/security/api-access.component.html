@@ -1,21 +1,5 @@
 <section class="access-page">
-  <header class="access-header">
-    <div>
-      <p class="eyebrow">Security administration</p>
-      <h1>API Access</h1>
-      <p class="subtitle">Assign endpoint access and permissions by user.</p>
-    </div>
-
-    <label class="user-picker">
-      <span>User</span>
-      <select [value]="selectedUserId()" (change)="selectUser($any($event.target).value)">
-        @for (user of users(); track user.userId) {
-          <option [value]="user.userId">{{ user.displayName }} ({{ user.username }})</option>
-        }
-      </select>
-    </label>
-  </header>
-
+  <app-page-header title="Api Access Permission" />
   @if (loading()) {
     <div class="loading-panel" aria-live="polite">Loading API access…</div>
   } @else if (errorMessage() && !selectedUserId()) {
@@ -30,24 +14,19 @@
         <span>{{ selectedUser()?.username }} · {{ selectedUser()?.isActive ? 'Active' : 'Inactive' }}</span>
       </div>
       <div class="overview-stats">
-        <span><strong>{{ summary().applications }}</strong> applications</span>
-        <span><strong>{{ summary().apis }}</strong> APIs</span>
-        <span><strong>{{ summary().releases }}</strong> releases</span>
-        <span><strong>{{ summary().endpoints }}</strong> endpoints</span>
-        <span><strong>{{ summary().environments }}</strong> environments</span>
+        <span>applications<strong>{{ summary().applications }}</strong></span>
+        <span>APIs<strong>{{ summary().apis }}</strong></span>
+        <span>releases<strong>{{ summary().releases }}</strong></span>
+        <span>endpoints<strong>{{ summary().endpoints }}</strong></span>
+        <span>environments<strong>{{ summary().environments }}</strong></span>
       </div>
     </section>
 
-    <nav class="access-tabs" aria-label="API access views">
-      <button type="button" [class.active]="activeTab() === 'assigned'" (click)="setTab('assigned')">
-        Assigned access <span>{{ assignedCount() }}</span>
-      </button>
-      <button type="button" [class.active]="activeTab() === 'all'" (click)="setTab('all')">
-        All resources <span>{{ resourceRows().length }}</span>
-      </button>
-    </nav>
-
-    <section class="resource-panel">
+    <details class="access-filters">
+      <summary class="filter-summary">
+        <strong>Filters</strong>
+        <span class="filter-toggle"><span class="show-filters">Show filters</span><span class="hide-filters">Hide filters</span><span class="filter-chevron" aria-hidden="true">⌄</span></span>
+      </summary>
       <div class="filter-grid">
         <label class="search-field">
           <span>Search resources</span>
@@ -92,28 +71,41 @@
 
         <button class="clear-button" type="button" (click)="clearFilters()">Clear filters</button>
       </div>
+    </details>
 
-      <div class="bulk-toolbar">
-        <div class="selection-status">
-          <input type="checkbox" aria-label="Select all visible resources" [checked]="allVisibleSelected()"
-            (change)="toggleAllVisible($any($event.target).checked)" />
-          <span>{{ selectedCount() ? selectedCount() + ' selected' : 'Select visible' }}</span>
-        </div>
-        <div class="bulk-actions">
-          @if (selectedCount() === 0) {
-            <span class="toolbar-hint">Select rows to change access in bulk.</span>
-          } @else {
-            <span class="toolbar-hint">Changes remain pending until saved.</span>
+    <div class="access-header">
+      <nav class="access-tabs" aria-label="API access views">
+      <button type="button" [class.active]="activeTab() === 'assigned'" (click)="setTab('assigned')">
+        Assigned access <span>{{ assignedCount() }}</span>
+      </button>
+      <button type="button" [class.active]="activeTab() === 'all'" (click)="setTab('all')">
+        All resources <span>{{ resourceRows().length }}</span>
+      </button>
+    </nav>
+      <label class="user-picker">
+      <span>User</span>
+      <select [value]="selectedUserId()" (change)="selectUser($any($event.target).value)">
+        @for (user of users(); track user.userId) {
+          <option [value]="user.userId">{{ user.displayName }} ({{ user.username }})</option>
+        }
+      </select>
+    </label>
+    </div>
+
+    <section class="resource-panel">
+      @if (selectedCount() > 0) {
+        <div class="bulk-toolbar" role="group" aria-label="Bulk access actions">
+          <span class="selection-status" aria-live="polite">{{ selectedCount() }} selected</span>
+          <div class="bulk-actions">
             @if (selectedHasAssigned()) {
               <button type="button" class="secondary-action" (click)="removeSelected()">Remove selected access</button>
             }
             @if (selectedHasUnassigned()) {
               <button type="button" class="primary-action" (click)="grantReadToSelected()">Grant Read to selected</button>
             }
-          }
+          </div>
         </div>
-      </div>
-
+      }
       @if (errorMessage()) {
         <div class="error-banner" role="alert">{{ errorMessage() }}</div>
       }
@@ -126,18 +118,19 @@
       } @else {
         <div class="table-scroll">
           <table>
+            <colgroup><col class="select-column"><col class="application-column"><col class="api-column"><col><col class="context-column"><col class="permissions-column"><col class="action-column"></colgroup>
             <thead>
               <tr>
-                <th class="select-column"><span class="sr-only">Select</span></th>
+                <th class="select-column">
+                  <input type="checkbox" aria-label="Select all visible resources" title="Select all visible resources"
+                    [checked]="allVisibleSelected()" [indeterminate]="selectedCount() > 0 && !allVisibleSelected()"
+                    (change)="toggleAllVisible($any($event.target).checked)" />
+                </th>
                 <th>Application</th>
-                <th>API</th>
-                <th>Release</th>
+                <th>API / Release</th>
                 <th>Endpoint</th>
-                <th>Method</th>
-                <th>Environment</th>
-                <th class="permission-column">Read</th>
-                <th class="permission-column">Create</th>
-                <th class="permission-column">Edit</th>
+                <th>Method / Environment</th>
+                <th class="permissions-column">Permissions</th>
                 <th class="action-column"><span class="sr-only">Actions</span></th>
               </tr>
             </thead>
@@ -149,18 +142,22 @@
                       [attr.aria-label]="'Select ' + row.endpointName + ' in ' + row.environmentType"
                       (change)="toggleRowSelection(row.key, $any($event.target).checked)" />
                   </td>
-                  <td><strong>{{ row.applicationName }}</strong><small>{{ row.applicationCode }}</small></td>
-                  <td><strong>{{ row.apiName }}</strong></td>
-                  <td><span class="release-chip">{{ row.releaseVersion }}</span></td>
-                  <td><strong>{{ row.endpointName }}</strong><code>{{ row.relativePath }}</code></td>
-                  <td><span class="method-chip" [class]="methodClass(row.httpMethod)">{{ row.httpMethod }}</span></td>
-                  <td>
+                  <td data-label="Application"><strong>{{ row.applicationName }}</strong><small>{{ row.applicationCode }}</small></td>
+                  <td data-label="API / Release"><strong>{{ row.apiName }}</strong><span class="release-chip">{{ row.releaseVersion }}</span></td>
+                  <td data-label="Endpoint"><strong>{{ row.endpointName }}</strong><code>{{ row.relativePath }}</code></td>
+                  <td data-label="Method / Environment">
+                    <div class="resource-context"><span class="method-chip" [class]="methodClass(row.httpMethod)">{{ row.httpMethod }}</span>
                     <span class="environment-chip" [class.disabled]="!row.environmentEnabled">{{ row.environmentType }}</span>
                     @if (!row.environmentEnabled) { <small>Disabled</small> }
+                    </div>
                   </td>
-                  <td class="permission-column"><input type="checkbox" [checked]="permission(row, 'canRead')" [disabled]="!row.environmentEnabled && !isAssigned(row.key)" (change)="togglePermission(row, 'canRead', $any($event.target).checked)" /></td>
-                  <td class="permission-column"><input type="checkbox" [checked]="permission(row, 'canCreate')" [disabled]="!row.environmentEnabled && !isAssigned(row.key)" (change)="togglePermission(row, 'canCreate', $any($event.target).checked)" /></td>
-                  <td class="permission-column"><input type="checkbox" [checked]="permission(row, 'canEdit')" [disabled]="!row.environmentEnabled && !isAssigned(row.key)" (change)="togglePermission(row, 'canEdit', $any($event.target).checked)" /></td>
+                  <td data-label="Permissions">
+                    <div class="permission-options">
+                      <label><input type="checkbox" [checked]="permission(row, 'canRead')" [disabled]="!row.environmentEnabled && !isAssigned(row.key)" [attr.aria-label]="'Read ' + row.endpointName + ' in ' + row.environmentType" (change)="togglePermission(row, 'canRead', $any($event.target).checked)" /><span>Read</span></label>
+                      <label><input type="checkbox" [checked]="permission(row, 'canCreate')" [disabled]="!row.environmentEnabled && !isAssigned(row.key)" [attr.aria-label]="'Create ' + row.endpointName + ' in ' + row.environmentType" (change)="togglePermission(row, 'canCreate', $any($event.target).checked)" /><span>Create</span></label>
+                      <label><input type="checkbox" [checked]="permission(row, 'canEdit')" [disabled]="!row.environmentEnabled && !isAssigned(row.key)" [attr.aria-label]="'Edit ' + row.endpointName + ' in ' + row.environmentType" (change)="togglePermission(row, 'canEdit', $any($event.target).checked)" /><span>Edit</span></label>
+                    </div>
+                  </td>
                   <td class="action-column">
                     @if (isAssigned(row.key)) {
                       <button type="button" class="row-action" title="Remove access" [attr.aria-label]="'Remove access to ' + row.endpointName" (click)="removeRow(row.key)">

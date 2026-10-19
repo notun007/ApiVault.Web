@@ -12,6 +12,7 @@ import { AdminClient } from '../../core/services/admin.client';
 import { SecurityClient } from '../../core/services/security.client';
 import { ToastService } from '../../core/services/toast.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
+import { PageHeaderComponent } from '../../shared/components/page-header.component';
 
 type AccessTab = 'assigned' | 'all';
 type PermissionKey = 'canRead' | 'canCreate' | 'canEdit';
@@ -40,7 +41,7 @@ interface AccessSummary {
 @Component({
   selector: 'app-api-access',
   standalone: true,
-  imports: [EmptyStateComponent],
+  imports: [EmptyStateComponent, PageHeaderComponent],
   templateUrl: './api-access.component.html',
   styleUrl: './api-access.component.scss'
 })
