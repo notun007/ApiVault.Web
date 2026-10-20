@@ -47,7 +47,7 @@ export class AuthService {
 
   hasAnyRole(...roles: UserRole[]): boolean {
     const role = this.role();
-    return role !== null && roles.includes(role);
+    return role !== null && (roles.includes(role) || role === UserRole.SuperAdmin && roles.includes(UserRole.Admin));
   }
 
   private restoreSession(): void {

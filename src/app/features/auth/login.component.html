@@ -1,46 +1,56 @@
-<main class="login-page">
-  <section class="login-visual">
-    <div class="login-brand"><span class="brand-mark large">AV</span><span><strong>{{ runtime.config().applicationName }}</strong><small>Enterprise API governance</small></span></div>
-    <div class="login-message">
-      <span class="eyebrow light">Secure integration portfolio</span>
-      <h1>Know every API.<br>Trace every dependency.</h1>
-      <p>Register internal and third-party services, govern exact releases, control environment access, and retain test evidence in one Southeast Bank PLC-managed workspace.</p>
+<main class="auth-page">
+  <header class="auth-brand">
+    <svg class="auth-logo" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="m24 2 19 11-19 11L5 13Z" fill="#9270ff"/><path d="m24 2 19 11-9 5-19-11Z" fill="#54baff"/><path d="m5 17 15 9v20L5 37Z" fill="#743bff"/><path d="m28 26 15-9v20l-15 9Z" fill="#4459ff"/><path d="m5 17 7 4v20l-7-4Z" fill="#aa83ff"/></svg>
+    <span>{{ runtime.config().applicationName }}</span>
+  </header>
+
+  <section class="auth-story" aria-labelledby="auth-title">
+    <div class="auth-copy">
+      <p class="auth-eyebrow">Your API workspace</p>
+      <h1 id="auth-title">Connected APIs.<br>Confident teams.</h1>
+      <p class="auth-description">Discover services, manage access, and keep every integration in view.</p>
     </div>
-    <div class="login-proof-grid">
-      <article><strong>Lifecycle</strong><span>Draft to retirement</span></article>
-      <article><strong>Traceability</strong><span>Project-to-version links</span></article>
-      <article><strong>Protection</strong><span>SSRF and secret redaction</span></article>
-    </div>
+    <img class="auth-art" src="/images/apivault-login-orbits.png" alt="" fetchpriority="high" width="1672" height="941">
   </section>
 
-  <section class="login-form-panel">
-    <form class="login-card" [formGroup]="form" (ngSubmit)="submit()">
-      <span class="eyebrow">Authorized access</span>
-      <h2>Sign in to ApiVault</h2>
-      <p>Use the account assigned by your ApiVault administrator.</p>
+  <section class="auth-form-area" aria-labelledby="signin-title">
+    <form class="auth-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="auth-heading">
+        <span class="auth-lock"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2"/><path d="M12 14v3" stroke="white" stroke-width="2" stroke-linecap="round"/></svg></span>
+        <h2 id="signin-title">Welcome back</h2>
+        <p>Sign in to ApiVault</p>
+      </div>
 
-      <label class="field">
-        <span>Username</span>
-        <input class="input" formControlName="username" autocomplete="username" autofocus>
-        @if (form.controls.username.touched && form.controls.username.invalid) { <small class="field-error">Username is required.</small> }
-      </label>
-
-      <label class="field">
-        <span>Password</span>
-        <div class="password-wrap">
-          <input class="input" [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="current-password">
-          <button type="button" class="password-toggle" (click)="showPassword.update((value) => !value)">{{ showPassword() ? 'Hide' : 'Show' }}</button>
+      <div class="auth-field">
+        <label for="auth-username">Username</label>
+        <div class="auth-input-wrap">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4 21v-2a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v2Z"/></svg>
+          <input id="auth-username" formControlName="username" autocomplete="username" placeholder="Your username" required [attr.aria-invalid]="form.controls.username.touched && form.controls.username.invalid" [attr.aria-describedby]="form.controls.username.touched && form.controls.username.invalid ? 'username-error' : null">
         </div>
-        @if (form.controls.password.touched && form.controls.password.invalid) { <small class="field-error">Password is required.</small> }
-      </label>
+        @if (form.controls.username.touched && form.controls.username.invalid) { <small id="username-error" class="auth-field-error">Username is required.</small> }
+      </div>
 
-      @if (errorMessage()) { <div class="inline-alert error"><strong>Sign-in failed</strong><span>{{ errorMessage() }}</span></div> }
+      <div class="auth-field">
+        <label for="auth-password">Password</label>
+        <div class="auth-input-wrap">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg>
+          <input id="auth-password" [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="current-password" placeholder="••••••••••" required [attr.aria-invalid]="form.controls.password.touched && form.controls.password.invalid" [attr.aria-describedby]="form.controls.password.touched && form.controls.password.invalid ? 'password-error' : null">
+          <button class="auth-eye" type="button" (click)="showPassword.update((value) => !value)" [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'" [attr.aria-pressed]="showPassword()">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>@if (showPassword()) { <path d="m3 3 18 18"/> }</svg>
+          </button>
+        </div>
+        @if (form.controls.password.touched && form.controls.password.invalid) { <small id="password-error" class="auth-field-error">Password is required.</small> }
+      </div>
 
-      <button class="button button-primary button-full" type="submit" [disabled]="submitting()">
-        {{ submitting() ? 'Signing in…' : 'Sign in securely' }}
+      @if (errorMessage()) { <div class="auth-error" role="alert"><strong>Sign-in failed</strong><span>{{ errorMessage() }}</span></div> }
+
+      <button class="auth-submit" type="submit" [disabled]="submitting()" [attr.aria-busy]="submitting()">
+        {{ submitting() ? 'Signing in…' : 'Sign in' }}
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg>
       </button>
-
-      <div class="login-note"><span class="status-dot"></span><span>Authentication is issued by ApiVault.Api using signed JWT access tokens.</span></div>
+      <p class="auth-help">Need access?<br><span>Contact your administrator</span></p>
+      <div class="auth-security"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/><path d="m8 12 3 3 5-6"/></svg><span>Secure workspace</span></div>
     </form>
   </section>
+  <footer class="auth-footer">Southeast Bank PLC</footer>
 </main>

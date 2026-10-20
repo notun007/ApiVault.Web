@@ -1,0 +1,39 @@
+<app-page-header title="Menu Management" description="Organize groups, subgroups, and page links. Saved changes apply to the workspace.">
+  <button class="button button-ghost" type="button" (click)="reload()" [disabled]="loading() || saving()">Reload saved menu</button>
+  <button class="button button-primary" type="button" (click)="save()" [disabled]="loading() || saving() || (!dirty() && !editor.dirty)">{{saving() ? 'Saving…' : 'Save menu'}}</button>
+</app-page-header>
+@if(error()){<div class="inline-alert error" role="alert">{{error()}}</div>}
+@if(loading()){<div class="panel">Loading navigation…</div>} @else {
+  @if(!items().length){<section class="panel"><h2>Set up workspace navigation</h2><p>Create the default groups and links from the existing application screens.</p><button class="button button-primary" type="button" (click)="initialize()">Initialize default menu</button></section>}
+  <div class="menu-layout" [class.busy]="saving()">
+    <section class="panel menu-outline" aria-label="Menu structure">
+      <header class="panel-header"><div><h2>Navigation structure</h2><p>{{dirty() || editor.dirty ? 'Unsaved changes' : 'Saved layout'}} · Two group levels</p></div><button class="button button-ghost button-small" type="button" (click)="addGroup()" [disabled]="!items().length">Add group</button></header>
+      <p class="menu-guidance">Select an entry to edit it. Use the arrows to reorder entries within their group.</p>
+      <div class="menu-rows">
+        @for(row of rows();track row.item.id){
+          <div class="menu-row" [class.selected]="selectedId() === row.item.id" [style.padding-left.px]="12 + row.depth * 22">
+            <button class="entry-select" type="button" (click)="select(row.item)" [attr.aria-pressed]="selectedId() === row.item.id">
+              <app-menu-icon [name]="row.item.icon"/><span><strong>{{row.item.name}}</strong><small>{{row.item.isGroup ? (row.depth === 0 ? 'Group' : 'Subgroup') : 'Page'}}{{row.item.isActive ? '' : ' · Disabled'}}</small></span>
+            </button>
+            <button class="reorder" type="button" [attr.aria-label]="'Move ' + row.item.name + ' up'" [disabled]="atBoundary(row.item,-1)" (click)="move(row.item,-1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 14 6-6 6 6"/></svg></button>
+            <button class="reorder" type="button" [attr.aria-label]="'Move ' + row.item.name + ' down'" [disabled]="atBoundary(row.item,1)" (click)="move(row.item,1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 10 6 6 6-6"/></svg></button>
+          </div>
+        }
+      </div>
+    </section>
+    <section class="panel menu-editor" aria-label="Entry settings">
+      @if(selected();as item){
+        <h2>Edit {{item.isGroup ? 'group' : 'page link'}}</h2>
+        <form [formGroup]="editor" (ngSubmit)="apply()">
+          <label class="field"><span>Display name</span><input class="input" formControlName="name" maxlength="150" required></label>
+          <label class="field"><span>Parent group</span><select class="select" formControlName="parentId" aria-label="Parent group"><option value="">Top level</option>@for(parent of parents();track parent.id){<option [value]="parent.id">{{depth(parent.id)>0 ? '↳ ' : ''}}{{parent.name}}</option>}</select></label>
+          <label class="field"><span>Icon</span><div class="icon-choice"><app-menu-icon [name]="editor.controls.icon.value"/><select class="select" formControlName="icon" aria-label="Icon">@for(icon of icons;track icon){<option [value]="icon">{{icon}}</option>}</select></div></label>
+          <label class="enabled-choice"><input type="checkbox" formControlName="isActive"><span>Enabled</span></label>
+          @if(item.route){<p class="route-note">Page: <code>{{item.route}}</code></p>}
+          <p class="route-note">Disabling a group hides its children. Page access continues to follow existing security rules.</p>
+          <div class="editor-actions"><button class="button button-primary" type="submit">Apply to draft</button>@if(item.isGroup && depth(item.id)===0){<button class="button button-ghost" type="button" (click)="addGroup(true)">Add subgroup</button>}</div>
+        </form>
+      } @else {<h2>Entry settings</h2><p class="menu-guidance">Select a group or page to change its label, icon, parent, or visibility.</p>}
+    </section>
+  </div>
+}

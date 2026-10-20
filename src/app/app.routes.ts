@@ -65,6 +65,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/testing/test-history.component').then((m) => m.TestHistoryComponent)
       },
       {
+        path: 'admin/navigation',
+        canActivate: [roleGuard],
+        data: {roles: [UserRole.Admin, UserRole.SuperAdmin]},
+        loadComponent: () => import('./features/navigation/menu-management.component').then(m => m.MenuManagementComponent)
+      },
+      {
         path: 'admin/reference-data',
         redirectTo: 'admin/business-areas',
         pathMatch: 'full'
