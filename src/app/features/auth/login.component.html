@@ -1,14 +1,13 @@
 <main class="auth-page">
   <header class="auth-brand">
     <svg class="auth-logo" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="m24 2 19 11-19 11L5 13Z" fill="#9270ff"/><path d="m24 2 19 11-9 5-19-11Z" fill="#54baff"/><path d="m5 17 15 9v20L5 37Z" fill="#743bff"/><path d="m28 26 15-9v20l-15 9Z" fill="#4459ff"/><path d="m5 17 7 4v20l-7-4Z" fill="#aa83ff"/></svg>
-    <span>{{ runtime.config().applicationName }}</span>
+    <div class="auth-brand-copy"><span>{{ runtime.config().applicationName }}</span><p class="auth-eyebrow">Enterprise API Repository</p></div>
   </header>
 
   <section class="auth-story" aria-labelledby="auth-title">
     <div class="auth-copy">
-      <p class="auth-eyebrow">Enterprise API Workspace</p>
-      <h1 id="auth-title">Discover, test, and share APIs.<br>One trusted repository.</h1>
-      <p class="auth-description">Discover services, manage access, and keep every integration in view.</p>
+      <h1 id="auth-title">Discover, test, and share APIs.</h1>
+      <p class="auth-description">One trusted repository for API documentation, testing, and consumer access.</p>
     </div>
     <img class="auth-art" src="/images/apivault-login-orbits.png" alt="" fetchpriority="high" width="1672" height="941">
   </section>
