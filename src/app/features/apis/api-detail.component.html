@@ -1,148 +1,95 @@
 @if (loading()) {
   <div class="detail-loading"><div class="spinner"></div><span>Loading API governance record…</span></div>
 } @else if (api(); as item) {
-  <app-page-header [title]="item.name" [eyebrow]="item.publishingApplication.name" [description]="item.description || 'No description has been provided for this API.'">
-    <a class="button button-ghost" routerLink="/apis">← Catalog</a>
-    <a class="button button-secondary" [routerLink]="['/apis', item.id, 'compare']">Compare versions</a>
-    @if (canManage()) { <a class="button button-ghost" [routerLink]="['/apis', item.id, 'edit']">Edit API</a><button class="button button-primary" type="button" (click)="openCreateVersion()">+ Add release</button> }
-  </app-page-header>
-
-  <section class="identity-strip five-up">
-    <div><span>Ownership</span><strong>{{ item.ownershipType | enumLabel }}</strong></div>
-    <div><span>API type</span><strong>{{ item.protocol | enumLabel }}</strong></div>
-    <div><span>Business</span><strong>{{ item.businessArea.name }}</strong></div>
-    <div><span>Creator</span><strong>{{ item.creatorName }}</strong><small>{{ item.creatorEmail || 'No email' }}</small></div>
-    <div><span>Vendor</span><strong>{{ item.vendorName || 'In-house' }}</strong></div>
-  </section>
-
-  @if (item.externalReferenceUrl) { <div class="inline-alert info"><strong>External documentation</strong><a [href]="item.externalReferenceUrl" target="_blank" rel="noopener">{{ item.externalReferenceUrl }}</a></div> }
-
-  <section class="version-workspace">
-    <aside class="version-sidebar panel">
-      <header><span class="eyebrow">Release registry</span><h2>Versions</h2><p>{{ item.versions.length }} registered</p></header>
-      @if (item.versions.length > 1) {
-        <a class="button button-secondary button-small comparison-entry" [routerLink]="['/apis', item.id, 'compare']">Compare {{ item.versions.length }} versions</a>
-      } @else {
-        <div class="comparison-unavailable">
-          <strong>Comparison needs two releases</strong>
-          <span>Add another API release to enable side-by-side comparison.</span>
-        </div>
+    <app-page-header [title]="item.name">
+      <a class="button button-secondary" [routerLink]="['/apis', item.id, 'compare']"><svg class="detail-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v18M16 3v18M5 6l3-3 3 3M13 18l3 3 3-3"/></svg>Compare versions</a>
+      @if (canManage()) {
+        <a class="button button-ghost" [routerLink]="['/apis', item.id, 'edit']"><svg class="detail-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-5-5L4 14Z"/></svg>Edit API</a>
+        <button class="button button-primary" type="button" (click)="openCreateVersion()"><svg class="detail-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add release</button>
       }
-      <div class="version-list">
-        @for (version of sortedVersions(); track version.id) {
-          <button type="button" [class.active]="selectedVersionId() === version.id" (click)="selectedVersionId.set(version.id)">
-            <div><strong>v{{ version.version }}</strong>@if (version.isCurrent) { <span class="current-dot">Current</span> }</div>
-            <span>{{ version.releaseName || 'Unnamed release' }}</span>
-            <small class="badge mini" [class]="'badge mini ' + statusClass(version.lifecycleStatus)">{{ version.lifecycleStatus }}</small>
-          </button>
-        } @empty {
-          <app-empty-state symbol="V" title="No releases" message="Add the first version to define endpoints and environments."></app-empty-state>
+    </app-page-header>
+  <div class="api-detail-design">
+    <section class="panel api-overview-card" aria-label="API overview">
+      <dl class="api-metadata">
+        <div><dt>Protocol</dt><dd>{{ item.protocol | enumLabel }}</dd></div>
+        <div><dt>Ownership</dt><dd>{{ item.ownershipType | enumLabel }}</dd></div>
+        <div><dt>Business area</dt><dd>{{ item.businessArea.name }}</dd></div>
+        <div><dt>Publisher</dt><dd>{{ item.publishingApplication.name }}</dd></div>
+        <div><dt>Creator</dt><dd>{{ item.creatorName }}@if (item.creatorEmail) { <small>{{ item.creatorEmail }}</small> }</dd></div>
+        <div><dt>Vendor</dt><dd>{{ item.vendorName || 'In-house' }}</dd></div>
+      </dl>
+      <div class="api-overview-links">
+        @if (item.externalReferenceUrl) {
+          <a class="external-documentation" [href]="item.externalReferenceUrl" target="_blank" rel="noopener">External documentation<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7M21 3 10 14M10 3H3v18h18v-7"/></svg></a>
         }
       </div>
-    </aside>
+    </section>
 
-    <div class="version-content">
-      @if (selectedVersion(); as version) {
-        <section class="panel version-hero">
-          <div class="version-title">
-            <div><span class="eyebrow">Selected release</span><h2>v{{ version.version }} <small>{{ version.releaseName }}</small></h2></div>
-            <div class="version-actions">
-              <a class="button button-ghost button-small" [routerLink]="['/apis', item.id, 'versions', version.id, 'reference']">Scalar reference</a>
-              @if (canManage()) { <button type="button" class="button button-ghost button-small" (click)="openEditVersion(version)">Edit metadata</button> }
-            </div>
-          </div>
-          <div class="release-metrics">
-            <div><span>Lifecycle</span><strong><span class="badge" [class]="'badge ' + statusClass(version.lifecycleStatus)">{{ version.lifecycleStatus }}</span></strong></div>
-            <div><span>Release date</span><strong>{{ version.releaseDateUtc ? (formatDate(version.releaseDateUtc)) : 'Not set' }}</strong></div>
-            <div><span>Authentication</span><strong>{{ version.authenticationType | enumLabel }}</strong></div>
-            <div><span>Default timeout</span><strong>{{ version.timeoutSeconds }} seconds</strong></div>
-            <div><span>Default request ceiling</span><strong>{{ formatter.byteSize(version.maxRequestBytes) }}</strong></div>
-            <div><span>Default response ceiling</span><strong>{{ formatter.byteSize(version.maxResponseBytes) }}</strong></div>
-          </div>
-          @if (canManage()) {
-            <div class="lifecycle-control">
-              <label class="field inline-field"><span>Move lifecycle forward</span><select class="select" [value]="version.lifecycleStatus" #lifecycleSelect>@for (status of lifecycleStatuses; track status) { <option [value]="status" [disabled]="lifecycleOrder(status) < lifecycleOrder(version.lifecycleStatus)">{{ status }}</option> }</select></label>
-              <button class="button button-secondary" type="button" [disabled]="lifecycleSelect.value === version.lifecycleStatus" (click)="changeLifecycle(version, lifecycleSelect.value)">Update lifecycle</button>
-            </div>
+    <section class="version-workspace">
+      <aside class="version-sidebar panel" aria-label="Release selection">
+        <header><h2>Releases <span>{{ item.versions.length }}</span></h2></header>
+        <div class="version-list">
+          @for (version of sortedVersions(); track version.id) {
+            <button type="button" [class.active]="selectedVersionId() === version.id" [attr.aria-pressed]="selectedVersionId() === version.id" (click)="selectedVersionId.set(version.id)">
+              <strong>{{ version.version.toLowerCase().startsWith('v') ? version.version : 'v' + version.version }}</strong>
+              @if (version.isCurrent) { <span class="current-dot" title="Default release for this API">Current</span> }
+            </button>
+          } @empty {
+            <app-empty-state symbol="V" title="No releases" message="Add the first version to define endpoints and environments."></app-empty-state>
           }
-        </section>
+        </div>
+        @if (item.versions.length === 1) { <p class="comparison-unavailable">Comparison is available when this API has at least two releases.</p> }
+      </aside>
 
-        <section class="panel">
-          <header class="panel-header"><div><span class="eyebrow">Interface contract</span><h2>Endpoints</h2><p>Relative paths, methods, schemas, samples, and SOAP actions.</p></div>@if (canManage()) { <button type="button" class="button button-primary button-small" (click)="openEndpoint(version)">+ Add endpoint</button> }</header>
-          @if (version.endpoints.length === 0) {
-            <app-empty-state symbol="EP" title="No endpoints registered" message="Add operations for this exact release.">@if (canManage()) { <button type="button" class="button button-primary button-small" (click)="openEndpoint(version)">Add endpoint</button> }</app-empty-state>
-          } @else {
-            <div class="endpoint-list">
-              @for (endpoint of version.endpoints; track endpoint.id) {
-                <article class="endpoint-card">
-                  <div class="method" [class]="'method ' + endpoint.httpMethod.toLowerCase()">{{ endpoint.httpMethod }}</div>
-                  <div class="endpoint-main"><strong>{{ endpoint.name }}</strong><code>{{ endpoint.relativePath }}</code><p>{{ endpoint.description || 'No endpoint description.' }}</p></div>
-                  <div class="endpoint-meta">@if (endpoint.soapAction) { <span>SOAPAction</span><code>{{ endpoint.soapAction }}</code> }</div>
-                  @if (canManage()) { <button type="button" class="button button-ghost button-small" (click)="openEndpoint(version, endpoint)">Edit</button> }
-                </article>
-              }
+      <div class="version-content">
+        @if (selectedVersion(); as version) {
+          <section id="api-overview" class="panel version-hero">
+            <div class="version-title">
+              <div class="release-heading"><div class="release-heading-line"><h2>{{ version.version.toLowerCase().startsWith('v') ? version.version : 'v' + version.version }}</h2><strong class="release-name">{{ version.releaseName || 'Unnamed release' }}</strong><span class="badge" [class]="'badge ' + statusClass(version.lifecycleStatus)">{{ version.lifecycleStatus }}</span>@if(version.isCurrent){<span class="current-dot" title="Default release for this API">Current</span>}</div><div class="release-facts"><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 11h18"/></svg>{{ version.releaseDateUtc ? formatDate(version.releaseDateUtc) : 'Release date not set' }}</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Authentication: {{ version.authenticationType | enumLabel }}</span></div></div>
+              <div class="version-actions"><a class="button button-primary button-small" [routerLink]="['/apis', item.id, 'versions', version.id, 'reference']"><svg class="detail-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h9l5 5v13H5ZM14 3v6h5M9 13h6M9 17h6"/></svg>API documentation</a>@if (canManage()) { <button type="button" class="button button-ghost button-small" (click)="openEditVersion(version)">Edit metadata</button> }</div>
             </div>
-          }
-        </section>
+            <details class="release-settings"><summary><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg><strong>Release settings</strong><span>Execution limits@if(canManage()){ and lifecycle}</span></summary><div class="release-settings-body">
+              <div class="release-metrics"><div><span>Default timeout</span><strong>{{ version.timeoutSeconds }} seconds</strong></div><div><span>Default request ceiling</span><strong>{{ formatter.byteSize(version.maxRequestBytes) }}</strong></div><div><span>Default response ceiling</span><strong>{{ formatter.byteSize(version.maxResponseBytes) }}</strong></div></div>
+              @if (canManage()) { <div class="lifecycle-control"><label class="field inline-field"><span>Move lifecycle forward</span><select class="select" [value]="version.lifecycleStatus" #lifecycleSelect>@for (status of lifecycleStatuses; track status) { <option [value]="status" [disabled]="lifecycleOrder(status) < lifecycleOrder(version.lifecycleStatus)">{{ status }}</option> }</select></label><button class="button button-secondary" type="button" [disabled]="lifecycleSelect.value === version.lifecycleStatus" (click)="changeLifecycle(version, lifecycleSelect.value)">Update lifecycle</button></div> }
+            </div></details>
+          </section>
 
-        <section class="panel">
-          <header class="panel-header"><div><span class="eyebrow">Deployment targets</span><h2>Environments</h2><p>Track approved base URLs and encrypted secret names for Development, UAT, Production, DR, and Sandbox.</p></div>@if (canManage()) { <button type="button" class="button button-primary button-small" (click)="openEnvironment(version)">+ Add environment</button> }</header>
-          <div class="environment-grid">
-            @for (environment of version.environments; track environment.id) {
-              <article class="environment-card" [class.disabled]="!environment.isEnabled">
-                <header><span class="environment-icon">{{ environmentCode(environment.environmentType) }}</span><div><strong>{{ environment.environmentType | enumLabel }}</strong><small>{{ environment.isEnabled ? 'Enabled' : 'Disabled' }}</small></div></header>
-                <a [href]="environment.baseUrl" target="_blank" rel="noopener">{{ environment.baseUrl }}</a>
-                <p>{{ environment.notes || 'No environment notes.' }}</p>
-                <div class="secret-list"><span>Encrypted secrets</span>@for (secret of environment.secretNames; track secret) { <code>{{ secret }}</code> } @empty { <small>No secrets configured</small> }</div>
-                @if (canManage()) { <footer><button class="button button-ghost button-small" type="button" (click)="openEnvironment(version, environment)">Edit</button><button class="button button-secondary button-small" type="button" (click)="openSecret(version, environment)">Set secret</button></footer> }
-              </article>
-            } @empty {
-              <app-empty-state symbol="EN" title="No environments" message="Register the approved base URLs used by this release."></app-empty-state>
+          <section id="api-endpoints" class="panel endpoints-panel">
+            <header class="panel-header"><div><h2>Endpoints <span class="section-count">{{ version.endpoints.length }}</span></h2><p>Operations available in this release.</p></div>@if (canManage()) { <button type="button" class="button button-primary button-small" (click)="openEndpoint(version)">+ Add endpoint</button> }</header>
+            @if (version.endpoints.length === 0) { <app-empty-state symbol="EP" title="No endpoints registered" message="Add operations for this exact release.">@if (canManage()) { <button type="button" class="button button-primary button-small" (click)="openEndpoint(version)">Add endpoint</button> }</app-empty-state> } @else {
+              <div class="endpoint-table-head" aria-hidden="true"><span>Method</span><span>Operation</span><span>Path</span><span>Description</span><span>Actions</span></div>
+              <div class="endpoint-list">@for (endpoint of version.endpoints; track endpoint.id) {
+                <article class="endpoint-card"><div class="method" [class]="'method ' + endpoint.httpMethod.toLowerCase()">{{ endpoint.httpMethod }}</div><strong class="endpoint-operation">{{ endpoint.name }}</strong><code class="endpoint-path">{{ endpoint.relativePath }}</code><div class="endpoint-description"><p>{{ endpoint.description || 'No endpoint description.' }}</p>@if (endpoint.soapAction) { <small>SOAPAction</small><code>{{ endpoint.soapAction }}</code> }</div>@if (canManage()) { <button type="button" class="button button-ghost button-small" (click)="openEndpoint(version, endpoint)">Edit</button> }</article>
+              }</div>
             }
-          </div>
-        </section>
+          </section>
 
-        <section class="detail-columns">
-          <article class="panel"><header class="panel-header"><div><span class="eyebrow">Access guidance</span><h2>Authentication</h2></div></header><dl class="detail-list"><div><dt>Method</dt><dd>{{ version.authenticationType | enumLabel }}</dd></div><div><dt>Instructions</dt><dd class="pre-wrap">{{ version.authenticationInstructions || 'No instructions supplied.' }}</dd></div><div><dt>Configuration</dt><dd><pre>{{ formatter.prettyJson(version.authenticationConfigJson) || 'No configuration JSON.' }}</pre></dd></div></dl></article>
-          <article class="panel"><header class="panel-header"><div><span class="eyebrow">Release evidence</span><h2>Change log</h2></div></header><div class="prose-box">{{ version.changeLog || 'No change log supplied for this release.' }}</div>@if (version.deprecatedAtUtc) { <div class="timeline-note"><span>Deprecated</span><strong>{{ formatDate(version.deprecatedAtUtc) }}</strong></div> }@if (version.retiredAtUtc) { <div class="timeline-note"><span>Retired</span><strong>{{ formatDate(version.retiredAtUtc) }}</strong></div> }</article>
-        </section>
+          <section id="api-environments" class="panel environments-panel">
+            <header class="panel-header"><div><h2>Environments <span class="section-count">{{ version.environments.length }}</span></h2><p>Approved base URLs and secret configuration for this release.</p></div>@if (canManage()) { <button type="button" class="button button-primary button-small" (click)="openEnvironment(version)">+ Add environment</button> }</header>
+            <div class="environment-grid">@for (environment of version.environments; track environment.id) {
+              <article class="environment-card" [class.disabled]="!environment.isEnabled"><header><span class="environment-icon">{{ environmentCode(environment.environmentType) }}</span><div><strong>{{ environment.environmentType | enumLabel }}</strong><small><span class="environment-state" [class.enabled]="environment.isEnabled"></span>{{ environment.isEnabled ? 'Enabled' : 'Disabled' }}</small></div></header><a [href]="environment.baseUrl" target="_blank" rel="noopener">{{ environment.baseUrl }}</a><p>{{ environment.notes || 'No environment notes.' }}</p><div class="secret-list"><span>Encrypted secrets</span>@for (secret of environment.secretNames; track secret) { <code>{{ secret }}</code> } @empty { <small>No secrets configured</small> }</div>@if (canManage()) { <footer><button class="button button-ghost button-small" type="button" (click)="openEnvironment(version, environment)">Edit</button><button class="button button-secondary button-small" type="button" (click)="openSecret(version, environment)">Set secret</button></footer> }</article>
+            } @empty { <app-empty-state symbol="EN" title="No environments" message="Register the approved base URLs used by this release."></app-empty-state> }</div>
+          </section>
 
-        <section class="panel authentication-overview" [class.authentication-overview-disabled]="version.authenticationProfile && !version.authenticationProfile.isEnabled">
-          <div class="authentication-overview-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.7 2.9 8.2 7 10 4.1-1.8 7-5.3 7-10V6l-7-3Z"></path><path d="m8.7 12 2.1 2.1 4.6-4.7"></path></svg></div>
-          @if (version.authenticationProfile; as profile) {
-            <div class="authentication-overview-copy"><span class="eyebrow">Automatic authentication</span><div class="authentication-overview-title"><h2>{{ profile.name }}</h2><span class="badge" [class]="profile.isEnabled ? 'badge status-active' : 'badge status-retired'">{{ profile.isEnabled ? 'Enabled' : 'Disabled' }}</span></div><p>{{ profile.type | enumLabel }}@if (usesTokenEndpoint(profile.type)) { <span> · {{ profile.tokenEndpointMethod }} {{ profile.tokenEndpointPath }}</span> }<span> · {{ profile.headerName }}</span></p></div>
-            <div class="authentication-overview-actions"><button type="button" class="button button-secondary" (click)="openAuthenticationProfileDetails(version)">View profile</button>@if (canManage()) { <button type="button" class="button button-ghost" (click)="openAuthenticationProfile(version)">Edit</button> }</div>
-          } @else {
-            <div class="authentication-overview-copy"><span class="eyebrow">Automatic authentication</span><h2>No profile configured</h2><p>Add a token, credentials, API key, custom headers, or mTLS strategy for inherited endpoints.</p></div>
-            @if (canManage()) { <div class="authentication-overview-actions"><button type="button" class="button button-primary" (click)="openAuthenticationProfile(version)">Configure profile</button></div> }
-          }
-        </section>
+          <section id="api-authentication" class="panel authentication-overview" [class.authentication-overview-disabled]="version.authenticationProfile && !version.authenticationProfile.isEnabled">
+            <div class="authentication-overview-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.7 2.9 8.2 7 10 4.1-1.8 7-5.3 7-10V6l-7-3Z"/><path d="m8.7 12 2.1 2.1 4.6-4.7"/></svg></div>
+            @if (version.authenticationProfile; as profile) { <div class="authentication-overview-copy"><span class="eyebrow">Automatic authentication</span><div class="authentication-overview-title"><h2>{{ profile.name }}</h2><span class="badge" [class]="profile.isEnabled ? 'badge status-active' : 'badge status-retired'">{{ profile.isEnabled ? 'Enabled' : 'Disabled' }}</span></div><p>{{ profile.type | enumLabel }}@if (usesTokenEndpoint(profile.type)) { <span> · {{ profile.tokenEndpointMethod }} {{ profile.tokenEndpointPath }}</span> }<span> · {{ profile.headerName }}</span></p></div><div class="authentication-overview-actions"><button type="button" class="button button-secondary" (click)="openAuthenticationProfileDetails(version)">View profile</button>@if (canManage()) { <button type="button" class="button button-ghost" (click)="openAuthenticationProfile(version)">Edit</button> }</div> } @else { <div class="authentication-overview-copy"><span class="eyebrow">Automatic authentication</span><h2>No profile configured</h2><p>Add a token, credentials, API key, custom headers, or mTLS strategy for inherited endpoints.</p></div>@if (canManage()) { <div class="authentication-overview-actions"><button type="button" class="button button-primary" (click)="openAuthenticationProfile(version)">Configure profile</button></div> } }
+          </section>
+          <article class="panel authentication-guidance"><header class="panel-header"><div><h2>Authentication guidance</h2><p>Credential requirements and configuration supplied for this release.</p></div></header><dl class="detail-list"><div><dt>Method</dt><dd>{{ version.authenticationType | enumLabel }}</dd></div><div><dt>Instructions</dt><dd class="pre-wrap">{{ version.authenticationInstructions || 'No instructions supplied.' }}</dd></div><div><dt>Configuration</dt><dd><pre>{{ formatter.prettyJson(version.authenticationConfigJson) || 'No configuration JSON.' }}</pre></dd></div></dl></article>
 
-        <section class="panel">
-          <header class="panel-header"><div><span class="eyebrow">Release usage</span><h2>Consuming applications</h2><p>Applications and systems linked to this exact API release.</p></div><span class="count-pill large">{{ version.consumers.length }}</span></header>
-          @if (version.consumers.length === 0) {
-            <app-empty-state symbol="CA" title="No consuming applications" message="No application has linked this exact release as a dependency."></app-empty-state>
-          } @else {
-            <div class="consumer-grid">
-              @for (consumer of version.consumers; track consumer.linkId) {
-                <article class="consumer-card">
-                  <header>
-                    <div><span class="eyebrow">{{ consumer.projectCode }}</span><h3>{{ consumer.projectName }}</h3></div>
-                    <span class="badge" [class]="consumer.isRequired ? 'badge consumer-required' : 'badge consumer-optional'">{{ consumer.isRequired ? 'Required' : 'Optional' }}</span>
-                  </header>
-                  <p>{{ consumer.purpose || 'No usage purpose has been recorded.' }}</p>
-                  <footer><a class="button button-ghost button-small" [routerLink]="['/projects', consumer.projectId]">Open application</a></footer>
-                </article>
-              }
-            </div>
-          }
-        </section>
-      } @else {
-        <section class="panel"><app-empty-state symbol="V" title="Select a version" message="Choose a release to inspect endpoints, environments, authentication, and documentation."></app-empty-state></section>
-      }
-    </div>
-  </section>
+          <section id="api-consumers" class="panel">
+            <header class="panel-header"><div><h2>Consuming applications <span class="section-count">{{ version.consumers.length }}</span></h2><p>Applications and systems linked to this exact API release.</p></div></header>
+            @if (version.consumers.length === 0) { <app-empty-state symbol="CA" title="No consuming applications" message="No application has linked this exact release as a dependency."></app-empty-state> } @else { <div class="consumer-grid">@for (consumer of version.consumers; track consumer.linkId) { <article class="consumer-card"><header><div><span class="eyebrow">{{ consumer.projectCode }}</span><h3>{{ consumer.projectName }}</h3></div><span class="badge" [class]="consumer.isRequired ? 'badge consumer-required' : 'badge consumer-optional'">{{ consumer.isRequired ? 'Required' : 'Optional' }}</span></header><p>{{ consumer.purpose || 'No usage purpose has been recorded.' }}</p><footer><a class="button button-ghost button-small" [routerLink]="['/projects', consumer.projectId]">Open application</a></footer></article> }</div> }
+          </section>
+          <article id="api-changelog" class="panel change-log-panel"><header class="panel-header"><div><h2>Change log</h2><p>Changes recorded for this release.</p></div></header><div class="prose-box">{{ version.changeLog || 'No change log supplied for this release.' }}</div>@if (version.deprecatedAtUtc) { <div class="timeline-note"><span>Deprecated</span><strong>{{ formatDate(version.deprecatedAtUtc) }}</strong></div> }@if (version.retiredAtUtc) { <div class="timeline-note"><span>Retired</span><strong>{{ formatDate(version.retiredAtUtc) }}</strong></div> }</article>
+        } @else {
+          <section class="panel"><app-empty-state symbol="V" title="Select a version" message="Choose a release to inspect endpoints, environments, authentication, and documentation."></app-empty-state></section>
+        }
+      </div>
+    </section>
+  </div>
 }
+
 
 <app-modal [open]="versionModalOpen()" [title]="editingVersion() ? 'Edit release metadata' : 'Add API release'" eyebrow="Version governance" [wide]="true" (closed)="closeVersionModal()">
   <form class="modal-form" [formGroup]="versionForm" (ngSubmit)="saveVersion()">

@@ -172,7 +172,13 @@ For a bank production rollout, recommended future backend enhancements include:
 
 ## Scalar behavior
 
-ApiVault.Web first retrieves the generated OpenAPI document with the authenticated Angular `HttpClient`, then passes the in-memory document to the self-hosted `@scalar/api-reference` package. The embedded Scalar test button is disabled so governed test execution remains in ApiVault’s controlled Test Console.
+The documentation page loads the API record through the authenticated catalog client, selects the exact release from the authorized response, and builds one in-memory OpenAPI 3.1 document for three formats: Interactive (Scalar), OpenAPI JSON (copy/download), and PDF (preview/download/print). Format tabs preserve the selected release. The old catalog-documents endpoint is not required.
+
+Stored environment secrets and authentication-profile configurations are excluded. Credential-like fields in structured samples are redacted. Free-text descriptions and examples remain catalog content and should contain documentation-safe examples.
+
+PDF generation (jsPDF) and page rendering (PDF.js) are loaded on demand. The worker is served locally from `pdfjs/pdf.worker.min.mjs` through the Angular asset configuration. The embedded Scalar test button is disabled so governed execution remains in the controlled Test Console.
+
+Run the documentation regression check with `node scripts/documentation-smoke.cjs`. It covers release identity, methods, parameters, authentication, limits, status codes, redaction, empty releases, and PDF generation.
 
 ## Security notes
 

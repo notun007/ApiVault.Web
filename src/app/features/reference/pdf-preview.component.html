@@ -1,0 +1,8 @@
+<div class="page-controls">
+  <button type="button" class="button button-ghost button-small" [disabled]="page() <= 1 || loading()" (click)="showPage(page() - 1)">Previous page</button>
+  <span aria-live="polite">Page {{ page() }} of {{ pages() }}</span>
+  <button type="button" class="button button-ghost button-small" [disabled]="page() >= pages() || loading()" (click)="showPage(page() + 1)">Next page</button>
+</div>
+@if (loading()) { <p role="status">Rendering PDF…</p> }
+@if (error()) { <p role="alert">{{ error() }} Use Download PDF to view it in another reader.</p> }
+<div class="page-stage" #stage><canvas #canvas role="img" [attr.aria-label]="'PDF preview, page ' + page() + ' of ' + pages()"></canvas></div>
