@@ -23,7 +23,7 @@ export class CatalogAccessComponent {
   readonly scope = signal(ALL_RELEASES); readonly profile = signal<CatalogProfile>('Viewer');
   readonly draft = signal<CatalogAssignment[]>([]); readonly initial = signal<CatalogAssignment[]>([]);
   readonly loading = signal(true); readonly saving = signal(false); readonly error = signal('');
-  readonly ready = signal(false); readonly legacy = signal(false); readonly allReleases = ALL_RELEASES;
+  readonly ready = signal(false); readonly allReleases = ALL_RELEASES;
   readonly changed = computed(() => JSON.stringify(this.draft()) !== JSON.stringify(this.initial()));
   readonly application = computed(() => this.catalog().find(x => x.id === this.applicationId()));
   readonly api = computed(() => this.application()?.apis.find(x => x.id === this.apiId()));
@@ -39,11 +39,11 @@ export class CatalogAccessComponent {
   selectUser(event: Event): void {
     const select = event.target as HTMLSelectElement;
     if (this.changed() && !window.confirm('Discard unsaved catalog profiles and switch user?')) { select.value = this.userId(); return; }
-    this.ready.set(false); this.userId.set(select.value); this.draft.set([]); this.initial.set([]); this.error.set(''); this.legacy.set(false);
+    this.ready.set(false); this.userId.set(select.value); this.draft.set([]); this.initial.set([]); this.error.set('');
     if (!select.value) return;
     const requestedUser = select.value; this.loading.set(true);
     this.client.getCatalogAccess(requestedUser).subscribe({
-      next: value => { if (this.userId() !== requestedUser) return; this.draft.set(value.assignments); this.initial.set(value.assignments); this.ready.set(true); this.legacy.set(value.hasLegacyAssignments); this.loading.set(false); },
+      next: value => { if (this.userId() !== requestedUser) return; this.draft.set(value.assignments); this.initial.set(value.assignments); this.ready.set(true); this.loading.set(false); },
       error: (e: HttpErrorResponse) => { this.error.set(readProblem(e)); this.loading.set(false); }
     });
   }

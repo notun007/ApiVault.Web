@@ -31,14 +31,6 @@ interface ResourceRow extends SaveUserApiAccessGrantRequest {
   environmentEnabled: boolean;
 }
 
-interface AccessSummary {
-  applications: number;
-  apis: number;
-  releases: number;
-  endpoints: number;
-  environments: number;
-}
-
 @Component({
   selector: 'app-api-access',
   standalone: true,
@@ -68,8 +60,6 @@ export class ApiAccessComponent {
   readonly loadingGrants = signal(false);
   readonly savingAccess = signal(false);
   readonly errorMessage = signal('');
-
-  readonly selectedUser = computed(() => this.users().find(user => user.userId === this.selectedUserId()));
 
   readonly resourceRows = computed<ResourceRow[]>(() => {
     const rows: ResourceRow[] = [];
@@ -171,17 +161,6 @@ export class ApiAccessComponent {
     const keys = [...new Set([...Object.keys(draft), ...Object.keys(initial)])];
     return keys
       .filter(key => JSON.stringify(draft[key] ?? null) !== JSON.stringify(initial[key] ?? null)).length;
-  });
-
-  readonly summary = computed<AccessSummary>(() => {
-    const assignedRows = this.resourceRows().filter(row => !!this.draftAccess()[row.key]);
-    return {
-      applications: new Set(assignedRows.map(row => row.applicationId)).size,
-      apis: new Set(assignedRows.map(row => row.apiAssetId)).size,
-      releases: new Set(assignedRows.map(row => row.apiVersionId)).size,
-      endpoints: new Set(assignedRows.map(row => row.apiEndpointId)).size,
-      environments: new Set(assignedRows.map(row => row.apiEnvironmentId)).size
-    };
   });
 
   constructor() {

@@ -1,6 +1,5 @@
 <section class="access-page">
   <app-page-header title="Test Console access" />
-  <p>Execution permissions apply to the selected endpoint and environment. Catalog profiles and documentation access are managed separately.</p>
   @if (loading()) {
     <div class="loading-panel" aria-live="polite">Loading API access…</div>
   } @else if (errorMessage() && !selectedUserId()) {
@@ -8,21 +7,6 @@
   } @else if (users().length === 0) {
     <app-empty-state symbol="U" title="No users found" message="Create a user before assigning API access." />
   } @else {
-    <section class="access-overview" aria-label="Selected user access summary">
-      <div class="user-avatar">{{ selectedUser()?.displayName?.slice(0, 2)?.toUpperCase() }}</div>
-      <div class="overview-user">
-        <strong>{{ selectedUser()?.displayName }}</strong>
-        <span>{{ selectedUser()?.username }} · {{ selectedUser()?.isActive ? 'Active' : 'Inactive' }}</span>
-      </div>
-      <div class="overview-stats">
-        <span>applications<strong>{{ summary().applications }}</strong></span>
-        <span>APIs<strong>{{ summary().apis }}</strong></span>
-        <span>releases<strong>{{ summary().releases }}</strong></span>
-        <span>endpoints<strong>{{ summary().endpoints }}</strong></span>
-        <span>environments<strong>{{ summary().environments }}</strong></span>
-      </div>
-    </section>
-
     <details class="access-filters">
       <summary class="filter-summary">
         <strong>Filters</strong>

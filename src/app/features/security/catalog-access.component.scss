@@ -1,1 +1,47 @@
-:host{display:block}.intro{color:var(--text-muted,#607782);margin:0 0 1.25rem}.user-picker{display:flex;align-items:center;gap:2rem;padding:1.25rem;margin-bottom:1rem}.user-picker .field{width:min(100%,30rem)}.user-picker>span,.assignment-editor>p{color:var(--text-muted,#607782);font-size:.875rem}.profile-guide{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin:1.5rem 0}.profile-guide>div{border-left:3px solid #18a79c;padding:.25rem 1rem}.profile-guide strong{font-size:1.05rem}.profile-guide p{margin:.5rem 0 0;line-height:1.6;color:#607782}.assignment-editor,.assignments{margin:1.25rem 0;padding:1.25rem}.assignment-editor h2,.assignments h2{font-size:1.15rem;margin:0 0 1rem}.assignment-fields{display:grid;grid-template-columns:1.1fr 1.2fr 1.2fr .8fr auto;gap:1rem;align-items:end}.assignment-editor>p{margin:1rem 0 0}.assignments header{display:flex;justify-content:space-between;gap:1rem}.assignments small{display:block;margin-top:.4rem;color:#607782}.assignments h2 span{font-size:.8rem;color:#607782}.empty{color:#607782;padding:1rem 0}.save-bar{position:sticky;bottom:1rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1rem 1.25rem;box-shadow:0 4px 20px #0b413414}.save-bar>div{display:flex;gap:.75rem}.legacy-note{background:#eef8f7;border-left:3px solid #18a79c;padding:1rem;line-height:1.6}@media(max-width:1100px){.assignment-fields{grid-template-columns:1fr 1fr}.assignment-fields>button{justify-self:start}}@media(max-width:700px){.profile-guide,.assignment-fields{grid-template-columns:1fr}.user-picker,.save-bar{align-items:stretch;flex-direction:column}.save-bar{position:static}}
+:host { display: block; }
+
+.access-editor,
+.assignments {
+  margin: 1rem 0;
+  padding: 1rem 1.25rem;
+}
+
+.assignment-fields {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1.3fr) minmax(9rem, 1fr) minmax(10rem, 1.1fr) minmax(10rem, 1fr) minmax(7.5rem, .8fr) auto;
+  gap: .75rem;
+  align-items: end;
+}
+
+.assignment-fields .field { min-width: 0; }
+.assignment-fields .select { width: 100%; }
+.assignment-fields > button { white-space: nowrap; }
+
+.assignments small { display: block; margin-top: .4rem; color: #607782; }
+.empty { color: #607782; padding: 1rem 0; }
+
+.save-bar {
+  position: sticky;
+  bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 4px 20px #0b413414;
+}
+.save-bar > div { display: flex; gap: .75rem; }
+
+@media (max-width: 1350px) {
+  .assignment-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .assignment-fields > button { justify-self: start; }
+}
+
+@media (max-width: 760px) {
+  .assignment-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .save-bar { align-items: stretch; flex-direction: column; position: static; }
+}
+
+@media (max-width: 520px) {
+  .assignment-fields { grid-template-columns: 1fr; }
+}
