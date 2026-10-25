@@ -20,8 +20,12 @@ export const routes: Routes = [
       },
       {
         path: 'apis',
+        canActivate: [roleGuard], data: { roles: [UserRole.Admin, UserRole.ApiOwner] },
         loadComponent: () => import('./features/apis/api-list.component').then((m) => m.ApiListComponent)
       },
+      { path: 'api-explorer', data: { viewer: true }, loadComponent: () => import('./features/apis/api-list.component').then(m => m.ApiListComponent) },
+      { path: 'api-explorer/:apiId/versions/:versionId/reference', data: { viewer: true }, loadComponent: () => import('./features/reference/scalar-reference.component').then(m => m.ScalarReferenceComponent) },
+      { path: 'api-explorer/:id', data: { viewer: true }, loadComponent: () => import('./features/apis/api-detail.component').then(m => m.ApiDetailComponent) },
       {
         path: 'apis/new',
         canActivate: [roleGuard],
@@ -109,8 +113,9 @@ export const routes: Routes = [
         path: 'admin/security/api-access',
         canActivate: [roleGuard],
         data: { roles: [UserRole.Admin] },
-        loadComponent: () => import('./features/security/api-access.component').then((m) => m.ApiAccessComponent)
+        loadComponent: () => import('./features/security/catalog-access.component').then(m => m.CatalogAccessComponent)
       },
+      { path: 'admin/security/api-execution-access', canActivate: [roleGuard], data: { roles: [UserRole.Admin] }, loadComponent: () => import('./features/security/api-access.component').then(m => m.ApiAccessComponent) },
       {
         path: 'admin/security/roles',
         canActivate: [roleGuard],

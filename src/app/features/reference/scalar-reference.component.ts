@@ -26,6 +26,7 @@ export class ScalarReferenceComponent implements AfterViewInit, OnDestroy {
   private reference?: ReturnType<typeof createApiReference>;
   private destroyed = false;
 
+  readonly recordRoot = this.route.snapshot.data['viewer'] ? '/api-explorer' : '/apis';
   readonly apiId = this.route.snapshot.paramMap.get('apiId') ?? '';
   readonly versionId = this.route.snapshot.paramMap.get('versionId') ?? '';
   readonly loading = signal(true);

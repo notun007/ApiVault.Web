@@ -1,3 +1,4 @@
+import { confirmMutation } from '../../shared/confirm-mutation';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -148,6 +149,7 @@ export class ProjectListComponent {
       description: value.description || null
     };
     const current = this.editing();
+    if (!confirmMutation(current ? 'update' : 'create', 'this application or system')) return;
     this.saving.set(true);
     (current ? this.client.update(current.id, request) : this.client.create(request)).subscribe({
       next: () => {

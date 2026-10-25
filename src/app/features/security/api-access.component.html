@@ -1,5 +1,6 @@
 <section class="access-page">
-  <app-page-header title="Api Access Permission" />
+  <app-page-header title="Test Console access" />
+  <p>Execution permissions apply to the selected endpoint and environment. Catalog profiles and documentation access are managed separately.</p>
   @if (loading()) {
     <div class="loading-panel" aria-live="polite">Loading API access…</div>
   } @else if (errorMessage() && !selectedUserId()) {
@@ -152,11 +153,9 @@
                     </div>
                   </td>
                   <td data-label="Permissions">
-                    <div class="permission-options">
-                      <label><input type="checkbox" [checked]="permission(row, 'canRead')" [disabled]="!row.environmentEnabled && !isAssigned(row.key)" [attr.aria-label]="'Read ' + row.endpointName + ' in ' + row.environmentType" (change)="togglePermission(row, 'canRead', $any($event.target).checked)" /><span>Read</span></label>
-                      <label><input type="checkbox" [checked]="permission(row, 'canCreate')" [disabled]="!row.environmentEnabled && !isAssigned(row.key)" [attr.aria-label]="'Create ' + row.endpointName + ' in ' + row.environmentType" (change)="togglePermission(row, 'canCreate', $any($event.target).checked)" /><span>Create</span></label>
-                      <label><input type="checkbox" [checked]="permission(row, 'canEdit')" [disabled]="!row.environmentEnabled && !isAssigned(row.key)" [attr.aria-label]="'Edit ' + row.endpointName + ' in ' + row.environmentType" (change)="togglePermission(row, 'canEdit', $any($event.target).checked)" /><span>Edit</span></label>
-                    </div>
+                    <select class="select execution-profile" [value]="executionProfile(row)" [disabled]="(!row.environmentEnabled && !isAssigned(row.key)) || savingAccess()" [attr.aria-label]="'Request access for ' + row.endpointName + ' in ' + row.environmentType" (change)="setExecutionProfile(row, $any($event.target).value)">
+  <option value="none">No execution access</option><option value="read">Read requests</option><option value="create">Read + create requests</option><option value="edit">Read + update/delete requests</option><option value="all">All request methods</option>
+</select>
                   </td>
                   <td class="action-column">
                     @if (isAssigned(row.key)) {

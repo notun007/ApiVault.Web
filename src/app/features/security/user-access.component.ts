@@ -1,3 +1,4 @@
+import { confirmMutation } from '../../shared/confirm-mutation';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
@@ -62,6 +63,7 @@ export class UserAccessComponent {
   save(): void {
     const userId = this.selectedUserId();
     if (!userId || !this.selectedRoleIds().length || this.saving()) return;
+    if (!confirmMutation('update', 'roles for the selected user')) return;
     this.saving.set(true);
     this.admin.updateUserRoles(userId, { roleIds: this.selectedRoleIds() }).subscribe({
       next: () => {

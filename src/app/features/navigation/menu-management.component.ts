@@ -1,3 +1,4 @@
+import { confirmMutation } from '../../shared/confirm-mutation';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -37,7 +38,7 @@ export class MenuManagementComponent {
   descendant(id:string,ancestor:string):boolean {let item=this.items().find(x=>x.id===id);while(item?.parentId){if(item.parentId===ancestor)return true;item=this.items().find(x=>x.id===item!.parentId);}return false;}
   depth(id:string):number {let level=0;let item=this.items().find(x=>x.id===id);while(item?.parentId){level++;item=this.items().find(x=>x.id===item!.parentId);}return level;}
   private canParent(parent:NavigationEntry):boolean {const selected=this.selected();if(!selected?.isGroup)return true;return this.depth(parent.id)===0 && !this.items().some(x=>x.isGroup && this.descendant(x.id,selected.id));}
-  initialize(){this.loading.set(true);this.service.initialize().subscribe({next:()=>{this.reload();this.service.load();},error:(e:HttpErrorResponse)=>{this.error.set(readProblem(e,'Could not set up the menu.'));this.loading.set(false);}});}
+  initialize(){if(this.loading())return;if(!confirmMutation('create', 'the initial workspace menu'))return;this.loading.set(true);this.service.initialize().subscribe({next:()=>{this.reload();this.service.load();},error:(e:HttpErrorResponse)=>{this.error.set(readProblem(e,'Could not set up the menu.'));this.loading.set(false);}});}
   select(item:NavigationEntry){if(this.selectedId()&&this.editor.dirty&&!this.apply())return;this.selectedId.set(item.id);this.editor.reset({name:item.name,icon:item.icon,parentId:item.parentId??'',isActive:item.isActive});}
   addGroup(subgroup=false){
     if(this.selectedId()&&this.editor.dirty&&!this.apply())return;
@@ -63,7 +64,9 @@ export class MenuManagementComponent {
   }
   atBoundary(item:NavigationEntry,offset:number){const siblings=childrenOf(this.items(),item.parentId);const i=siblings.findIndex(x=>x.id===item.id)+offset;return i<0||i>=siblings.length;}
   save(){
-    if(this.saving()||!this.apply())return;this.saving.set(true);this.error.set('');
+    if(this.saving()||!this.apply())return;
+    if(!confirmMutation('save', 'menu changes for the entire workspace'))return;
+    this.saving.set(true);this.error.set('');
     this.service.save({revision:this.revision,items:this.items()}).subscribe({next:layout=>{this.items.set(layout.items);this.revision=layout.revision;this.dirty.set(false);this.saving.set(false);this.service.load();this.toast.success('Menu saved for the workspace');},error:(e:HttpErrorResponse)=>{this.error.set(readProblem(e,'Could not save the menu.'));this.saving.set(false);}});
   }
 }

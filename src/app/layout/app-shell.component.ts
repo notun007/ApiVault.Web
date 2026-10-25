@@ -1,3 +1,4 @@
+import { confirmMutation } from '../shared/confirm-mutation';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -61,6 +62,7 @@ export class AppShellComponent {
       this.passwordError.set('The new password and confirmation do not match.');
       return;
     }
+    if (!confirmMutation('change', 'your password')) return;
     this.passwordSaving.set(true);
     this.auth.changePassword(request).subscribe({
       next: () => {

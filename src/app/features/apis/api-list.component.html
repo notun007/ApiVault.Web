@@ -1,7 +1,9 @@
-<app-page-header title="API catalog">
+<app-page-header [title]="viewer ? 'API Explorer' : 'API catalog'">
+  @if (!viewer || catalogPermissions.canManageAny()) { <a class="button button-ghost" [routerLink]="viewer ? '/apis' : '/api-explorer'">{{ viewer ? 'Manage catalog' : 'View API Explorer' }}</a> }
   @if (canManage()) { <a class="button button-primary" routerLink="/apis/new">+ Register API</a> }
 </app-page-header>
 
+@if (!viewer) { <div class="catalog-mode" style="display:flex;gap:.75rem;margin-bottom:1rem"><button type="button" class="button button-ghost button-small" [disabled]="!deletedOnly()" (click)="deletedOnly.set(false); search(1)">Active APIs</button><button type="button" class="button button-ghost button-small" [disabled]="deletedOnly()" (click)="deletedOnly.set(true); search(1)">Deleted APIs</button></div> }
 <section class="panel filter-panel">
   <header class="filter-panel-header">
     <h2>Filters</h2>
@@ -26,7 +28,7 @@
   @if (loading()) {
     <div class="table-loading">Loading API catalog…</div>
   } @else if (result().items.length === 0) {
-    <app-empty-state symbol="AP" title="No matching APIs" message="Change the filters or register a new API asset."></app-empty-state>
+    <app-empty-state symbol="AP" title="No matching APIs" [message]="viewer ? 'Change the filters or ask your administrator for API access.' : 'Change the filters or register a new API asset.'"></app-empty-state>
   } @else {
     <div class="table-wrap">
       <table>
@@ -42,13 +44,13 @@
         <tbody>
           @for (api of result().items; track api.id) {
             <tr>
-              <td><a class="table-link" [routerLink]="['/apis', api.id]">{{ api.name }}</a></td>
+              <td><a class="table-link" [routerLink]="[recordRoot, api.id]">{{ api.name }}</a></td>
               <td><span class="badge" [class.badge-blue]="api.ownershipType === 'ThirdParty'">{{ api.ownershipType | enumLabel }}</span></td>
               <td>{{ api.protocol | enumLabel }}</td>
               <td><strong class="cell-strong">{{ api.businessArea }}</strong></td>
               <td><strong class="cell-strong">{{ api.currentVersion || 'Not released' }}</strong></td>
               <td>
-                @if (api.versionCount > 1) {
+                @if (api.versionCount > 1 && !deletedOnly()) {
                   <a class="version-compare-link" [routerLink]="['/apis', api.id, 'compare']" [attr.aria-label]="'Compare ' + api.versionCount + ' versions of ' + api.name">
                     <strong>{{ api.versionCount }}</strong><span>Compare</span>
                   </a>
@@ -58,7 +60,7 @@
               </td>
               <td class="actions-cell">
                 <div class="grid-actions">
-                  <a class="button button-ghost button-small" [routerLink]="['/apis', api.id]">Open</a>
+                  @if (deletedOnly()) { @if (catalogPermissions.canDelete(api.id)) { <button type="button" class="button button-ghost button-small" (click)="restore(api.id)">Restore</button> } } @else { <a class="button button-ghost button-small" [routerLink]="[recordRoot, api.id]">Open</a> }
                 </div>
               </td>
             </tr>

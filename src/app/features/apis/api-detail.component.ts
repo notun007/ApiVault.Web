@@ -1,7 +1,9 @@
+import { CatalogPermissionsService } from '../../core/services/catalog-permissions.service';
+import { confirmMutation } from '../../shared/confirm-mutation';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { readProblem } from '../../core/http/error.interceptor';
 import {
   ApiDetailResponse,
@@ -40,17 +42,30 @@ import { EnumLabelPipe } from '../../shared/pipes/enum-label.pipe';
 export class ApiDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly apiClient = inject(ApiCatalogClient);
+  readonly catalogPermissions = inject(CatalogPermissionsService);
   private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
   readonly formatter = inject(FormatService);
 
+  private readonly router = inject(Router);
+  readonly viewer = !!this.route.snapshot.data['viewer'];
+  readonly recordRoot = this.viewer ? '/api-explorer' : '/apis';
+  readonly deleting = signal(false);
   readonly id = this.route.snapshot.paramMap.get('id') ?? '';
   readonly loading = signal(true);
   readonly api = signal<ApiDetailResponse | null>(null);
   readonly selectedVersionId = signal('');
-  readonly canManage = () => this.auth.hasAnyRole(UserRole.Admin, UserRole.ApiOwner);
-  readonly canTest = () => this.auth.hasAnyRole(UserRole.Admin, UserRole.ApiOwner, UserRole.Tester);
+  readonly canCreate = (versionId?: string) => !this.viewer && this.catalogPermissions.canCreate(this.id, versionId);
+  readonly canEdit = (versionId?: string, endpointId?: string, environmentId?: string) => !this.viewer && this.catalogPermissions.canEdit(this.id, versionId, endpointId, environmentId);
+  readonly canManage = () => this.canCreate() || this.canEdit();
+  readonly canTest = () => !this.viewer && this.auth.hasAnyRole(UserRole.Admin, UserRole.ApiOwner, UserRole.Tester);
+  deleteApi(): void {
+    if (this.viewer || this.deleting() || !this.catalogPermissions.canDelete(this.id)) return;
+    if (!confirmMutation('delete', `${this.api()?.name ?? 'this API'} from the active catalog (it can be restored from Deleted APIs)`)) return;
+    this.deleting.set(true);
+    this.apiClient.remove(this.id).subscribe({ next: () => { this.toast.success('API moved to Deleted APIs'); void this.router.navigate(['/apis']); }, error: () => { this.deleting.set(false); this.toast.error('Could not delete API'); } });
+  }
   readonly lifecycleStatuses = Object.values(ApiLifecycleStatus);
   readonly authenticationTypes = Object.values(AuthenticationType);
   readonly authenticationProfileTypes = Object.values(AuthenticationProfileType);
@@ -147,7 +162,7 @@ export class ApiDetailComponent {
     certificatePasswordSecretName: ['MTLS_CERTIFICATE_PASSWORD']
   });
 
-  constructor() { this.reload(); }
+  constructor() { this.catalogPermissions.load(); this.reload(); }
 
   reload(preferredVersionId?: string): void {
     this.apiClient.get(this.id).subscribe({
@@ -202,6 +217,7 @@ export class ApiDetailComponent {
     const value = this.versionForm.getRawValue();
     let authenticationConfigJson: string | null = null;
     try { authenticationConfigJson = this.normalizeJson(value.authenticationConfigJson); } catch { this.modalError.set('Authentication configuration must be valid JSON.'); return; }
+    if (!confirmMutation(this.editingVersion() ? 'update' : 'create', 'this API release')) return;
     this.modalSaving.set(true);
     this.modalError.set('');
     const common = {
@@ -227,6 +243,7 @@ export class ApiDetailComponent {
   }
 
   changeLifecycle(version: ApiVersionResponse, lifecycleStatus: string): void {
+    if (!confirmMutation('update', `the release lifecycle to ${lifecycleStatus}`)) return;
     this.apiClient.changeLifecycle(this.id, version.id, lifecycleStatus).subscribe({
       next: () => { this.toast.success('Lifecycle updated', `Release v${version.version} is now ${lifecycleStatus}.`); this.reload(version.id); },
       error: (error: HttpErrorResponse) => this.toast.error('Lifecycle update failed', readProblem(error))
@@ -267,6 +284,7 @@ export class ApiDetailComponent {
         maxResponseBytes: value.maxResponseBytes,
         timeoutSeconds: value.timeoutSeconds
       };
+      if (!confirmMutation(this.editingEndpoint() ? 'update' : 'create', 'this API endpoint')) return;
       this.modalSaving.set(true);
       const editing = this.editingEndpoint();
       const operation = editing
@@ -299,6 +317,7 @@ export class ApiDetailComponent {
     const value = this.environmentForm.getRawValue();
     const request: CreateEnvironmentRequest = { ...value, notes: value.notes || null };
     const editing = this.editingEnvironment();
+    if (!confirmMutation(editing ? 'update' : 'create', 'this API environment')) return;
     this.modalSaving.set(true);
     const operation = editing
       ? this.apiClient.updateEnvironment(this.id, version.id, editing.id, request)
@@ -322,6 +341,7 @@ export class ApiDetailComponent {
     const version = this.modalVersion();
     const environment = this.secretEnvironment();
     if (!version || !environment) return;
+    if (!confirmMutation('save', 'this encrypted environment secret')) return;
     this.modalSaving.set(true);
     this.apiClient.setEnvironmentSecret(this.id, version.id, environment.id, this.secretForm.getRawValue()).subscribe({
       next: () => { this.modalSaving.set(false); this.secretModalOpen.set(false); this.toast.success('Secret encrypted and stored'); this.reload(version.id); },
@@ -419,6 +439,7 @@ export class ApiDetailComponent {
       isEnabled: value.isEnabled,
       configurationJson
     };
+    if (!confirmMutation(version.authenticationProfile ? 'update' : 'create', 'this authentication profile')) return;
     this.modalSaving.set(true);
     this.modalError.set('');
     this.apiClient.upsertAuthenticationProfile(this.id, version.id, request).subscribe({

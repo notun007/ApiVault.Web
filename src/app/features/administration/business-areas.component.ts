@@ -1,3 +1,4 @@
+import { confirmMutation } from '../../shared/confirm-mutation';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -60,6 +61,7 @@ export class BusinessAreasComponent {
     const value = this.form.getRawValue();
     const request: CreateLookupRequest = { code: value.code, name: value.name, description: value.description || null };
     const item = this.editing();
+    if (!confirmMutation(item ? 'update' : 'create', 'this business area')) return;
     this.saving.set(true);
     (item ? this.client.updateBusinessArea(item.id, request) : this.client.createBusinessArea(request)).subscribe({
       next: () => {

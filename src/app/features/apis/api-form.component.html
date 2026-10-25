@@ -32,5 +32,5 @@
   </section>
 
   @if (errorMessage()) { <div class="inline-alert error"><strong>Could not save API</strong><span>{{ errorMessage() }}</span></div> }
-  <div class="sticky-form-actions"><a class="button button-ghost" [routerLink]="editing() ? ['/apis', apiId] : ['/apis']">Cancel</a><button class="button button-primary" type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : (editing() ? 'Save changes' : 'Register API') }}</button></div>
+  <div class="sticky-form-actions"><a class="button button-ghost" [routerLink]="editing() ? ['/apis', apiId] : ['/apis']">Cancel</a><button class="button button-primary" type="submit" [disabled]="saving() || !canSave()">{{ saving() ? 'Saving…' : (editing() ? 'Save changes' : 'Register API') }}</button></div>
 </form>

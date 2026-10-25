@@ -1,3 +1,4 @@
+import { confirmMutation } from '../../shared/confirm-mutation';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
@@ -261,6 +262,15 @@ export class ApiAccessComponent {
       : keys.filter(key => !visibleKeys.includes(key)));
   }
 
+  executionProfile(row: ResourceRow): string {
+    const value = this.draftAccess()[row.key];
+    return !value?.canRead ? 'none' : value.canCreate && value.canEdit ? 'all' : value.canCreate ? 'create' : value.canEdit ? 'edit' : 'read';
+  }
+  setExecutionProfile(row: ResourceRow, value: string): void {
+    if (this.savingAccess()) return;
+    if (value === 'none') { this.removeRow(row.key); return; }
+    this.draftAccess.update(current => ({ ...current, [row.key]: { ...this.toSaveRequest(row), canRead: true, canCreate: value === 'all' || value === 'create', canEdit: value === 'all' || value === 'edit' } }));
+  }
   permission(row: ResourceRow, key: PermissionKey): boolean { return !!this.draftAccess()[row.key]?.[key]; }
 
   togglePermission(row: ResourceRow, key: PermissionKey, checked: boolean): void {
@@ -314,6 +324,7 @@ export class ApiAccessComponent {
   saveChanges(): void {
     const userId = this.selectedUserId();
     if (!userId || !this.hasChanges() || this.savingAccess()) return;
+    if (!confirmMutation('save', 'API access changes for the selected user')) return;
     this.savingAccess.set(true);
     this.errorMessage.set('');
     const grants = Object.values(this.draftAccess());

@@ -1,3 +1,5 @@
+import { CatalogPermissionsService } from '../../core/services/catalog-permissions.service';
+import { confirmMutation } from '../../shared/confirm-mutation';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -25,12 +27,14 @@ export class ApiFormComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly apiClient = inject(ApiCatalogClient);
+  readonly catalogPermissions = inject(CatalogPermissionsService);
   private readonly adminClient = inject(AdminClient);
   private readonly projectClient = inject(ProjectClient);
   private readonly toast = inject(ToastService);
 
   readonly apiId = this.route.snapshot.paramMap.get('id') ?? '';
   readonly editing = signal(!!this.apiId);
+  readonly originalPublisherId = signal('');
   readonly saving = signal(false);
   readonly errorMessage = signal('');
   readonly applications = signal<ProjectSummaryResponse[]>([]);
@@ -52,12 +56,14 @@ export class ApiFormComponent {
     const ownershipType = this.form.controls.ownershipType.value;
     const vendorCompanyId = this.form.controls.vendorCompanyId.value;
     return this.applications().filter((application) =>
-      application.ownershipType === ownershipType
+      (this.editing() || this.catalogPermissions.canRegisterApi(application.id))
+      && application.ownershipType === ownershipType
       && (ownershipType !== ApiOwnershipType.ThirdParty || (!!vendorCompanyId && application.vendorId === vendorCompanyId))
     );
   }
 
   constructor() {
+    this.catalogPermissions.load();
     forkJoin({
       applications: this.projectClient.getAll(true),
       vendors: this.adminClient.getVendors(true),
@@ -67,6 +73,7 @@ export class ApiFormComponent {
         this.applications.set(applications);
         this.vendors.set(vendors);
         if (api) {
+          this.originalPublisherId.set(api.publishingApplicationId);
           const publishingApplication = applications.find((application) => application.id === api.publishingApplicationId);
           this.form.patchValue({
             name: api.name,
@@ -109,7 +116,15 @@ export class ApiFormComponent {
       && (this.form.controls.vendorCompanyId.touched || this.form.controls.publishingApplicationId.touched);
   }
 
+  canSave(): boolean {
+    const publisher = this.form.controls.publishingApplicationId.value;
+    return this.editing()
+      ? this.catalogPermissions.canEdit(this.apiId) && (publisher === this.originalPublisherId() || this.catalogPermissions.canRegisterApi(publisher))
+      : !!publisher && this.catalogPermissions.canRegisterApi(publisher);
+  }
+
   save(): void {
+    if (!this.canSave()) { this.errorMessage.set('You do not have permission to save this API registration.'); return; }
     if (this.form.controls.ownershipType.value === ApiOwnershipType.ThirdParty && !this.form.controls.vendorCompanyId.value) {
       this.form.controls.vendorCompanyId.markAsTouched();
       return;
@@ -118,6 +133,7 @@ export class ApiFormComponent {
       this.form.markAllAsTouched();
       return;
     }
+    if (!confirmMutation(this.apiId ? 'update' : 'create', 'this API registration')) return;
     this.saving.set(true);
     this.errorMessage.set('');
     const value = this.form.getRawValue();

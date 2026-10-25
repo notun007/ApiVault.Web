@@ -1,5 +1,5 @@
 <app-page-header [title]="title()">
-  <a class="button button-ghost" [routerLink]="['/apis', apiId]">Back to API record</a>
+  <a class="button button-ghost" [routerLink]="[recordRoot, apiId]">Back to API record</a>
 </app-page-header>
 @if (document()) {
   <p class="release-context">API documentation <span>Release {{ version() }}</span></p>

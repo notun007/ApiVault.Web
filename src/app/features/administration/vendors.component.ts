@@ -1,3 +1,4 @@
+import { confirmMutation } from '../../shared/confirm-mutation';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -45,7 +46,9 @@ export class VendorsComponent {
     if (this.form.invalid || this.saving()) { this.form.markAllAsTouched(); return; }
     const value = this.form.getRawValue();
     const request: SaveVendorRequest = { ...value, description: value.description || null, contactPerson: value.contactPerson || null, supportEmail: value.supportEmail || null, supportPhone: value.supportPhone || null, websiteUrl: value.websiteUrl || null };
-    const vendor = this.editing(); this.saving.set(true);
+    const vendor = this.editing();
+    if (!confirmMutation(vendor ? 'update' : 'create', 'this vendor')) return;
+    this.saving.set(true);
     (vendor ? this.client.updateVendor(vendor.id, request) : this.client.createVendor(request)).subscribe({
       next: () => { this.saving.set(false); this.modalOpen.set(false); this.toast.success(vendor ? 'Vendor updated' : 'Vendor added'); this.load(); },
       error: (error: HttpErrorResponse) => { this.saving.set(false); this.errorMessage.set(readProblem(error)); }

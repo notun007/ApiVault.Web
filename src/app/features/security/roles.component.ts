@@ -1,3 +1,4 @@
+import { confirmMutation } from '../../shared/confirm-mutation';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -126,6 +127,7 @@ export class RolesComponent {
     const value = this.form.getRawValue();
     const request: CreateRoleRequest = { ...value, description: value.description || null };
     const current = this.editing();
+    if (!confirmMutation(current ? 'update' : 'create', 'this security role')) return;
     this.saving.set(true);
     const operation = current ? this.client.updateRole(current.id, request) : this.client.createRole(request);
     operation.subscribe({

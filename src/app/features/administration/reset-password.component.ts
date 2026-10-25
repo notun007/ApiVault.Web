@@ -1,3 +1,4 @@
+import { confirmMutation } from '../../shared/confirm-mutation';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -49,6 +50,7 @@ export class ResetPasswordComponent {
     }
 
     const user = this.users().find((item) => item.id === userId);
+    if (!confirmMutation('reset', 'the selected user password')) return;
     this.saving.set(true);
     this.errorMessage.set('');
     this.client.resetUserPassword(userId, { newPassword, confirmPassword }).subscribe({

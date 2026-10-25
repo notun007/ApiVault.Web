@@ -1,3 +1,4 @@
+import { confirmMutation } from '../../shared/confirm-mutation';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -71,6 +72,7 @@ export class ProjectDetailComponent {
   saveLink(): void {
     if (this.form.invalid || this.saving()) { this.form.markAllAsTouched(); return; }
     const value = this.form.getRawValue();
+    if (!confirmMutation('save', 'this application-to-API release link')) return;
     this.saving.set(true);
     this.projectClient.linkApiVersion(this.id, { apiVersionId: value.apiVersionId, purpose: value.purpose || null, isRequired: value.isRequired }).subscribe({
       next: (project) => { this.project.set(project); this.saving.set(false); this.modalOpen.set(false); this.toast.success('API version linked to project'); },

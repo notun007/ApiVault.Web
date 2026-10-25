@@ -1,3 +1,4 @@
+import { CatalogPermissionsService } from '../../core/services/catalog-permissions.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -21,6 +22,7 @@ import { EnumLabelPipe } from '../../shared/pipes/enum-label.pipe';
 })
 export class TestConsoleComponent {
   private readonly apiClient = inject(ApiCatalogClient);
+  readonly catalogPermissions = inject(CatalogPermissionsService);
   private readonly testClient = inject(TestClient);
   private readonly toast = inject(ToastService);
   readonly formatter = inject(FormatService);
@@ -62,7 +64,8 @@ export class TestConsoleComponent {
   ];
 
   constructor() {
-    this.apiClient.search({ page: 1, pageSize: 200 }).subscribe((result) => this.apis.set(result.items));
+    this.catalogPermissions.load();
+    this.apiClient.search({ page: 1, pageSize: 200, executionOnly: true }).subscribe((result) => this.apis.set(result.items));
   }
 
   selectApi(apiId: string): void {
@@ -73,7 +76,7 @@ export class TestConsoleComponent {
     this.apiDetail.set(null);
     this.resetRequest(false);
     if (!apiId) return;
-    this.apiClient.get(apiId).subscribe((api) => {
+    this.apiClient.getForExecution(apiId).subscribe((api) => {
       this.apiDetail.set(api);
       const current = api.versions.find((version) => version.isCurrent) ?? api.versions[0];
       if (current) {
@@ -109,7 +112,8 @@ export class TestConsoleComponent {
   }
 
   canExecute(): boolean {
-    return !!this.selectedEndpointId() && !!this.selectedEnvironmentId() && !!this.selectedEnvironment()?.isEnabled;
+    return !!this.selectedEndpointId() && !!this.selectedEnvironmentId() && !!this.selectedEnvironment()?.isEnabled
+      && this.catalogPermissions.canExecute(this.selectedEndpointId(), this.selectedEnvironmentId(), this.selectedEndpoint()?.httpMethod ?? '');
   }
 
   execute(): void {

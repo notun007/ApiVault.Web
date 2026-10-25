@@ -35,6 +35,9 @@ export class ApiCatalogClient {
     return this.http.get<PagedResult<ApiSummaryResponse>>(this.runtime.apiUrl('/api/apis'), { params });
   }
 
+  remove(id: string) { return this.http.delete<void>(this.runtime.apiUrl(`/api/apis/${id}`)); }
+  restore(id: string) { return this.http.post<void>(this.runtime.apiUrl(`/api/apis/${id}/restore`), {}); }
+  getForExecution(id: string) { return this.http.get<ApiDetailResponse>(this.runtime.apiUrl(`/api/apis/${id}/execution-catalog`)); }
   get(id: string) {
     return this.http.get<ApiDetailResponse>(this.runtime.apiUrl(`/api/apis/${id}`));
   }

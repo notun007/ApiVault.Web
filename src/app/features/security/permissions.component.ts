@@ -1,3 +1,4 @@
+import { confirmMutation } from '../../shared/confirm-mutation';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
@@ -123,6 +124,7 @@ export class PermissionsComponent {
   save(): void {
     const roleId = this.selectedRoleId();
     if (!roleId || this.saving()) return;
+    if (!confirmMutation('update', 'permissions for the selected role')) return;
     this.saving.set(true);
     const permissions = Object.entries(this.assignments()).map(([screenId, permissionIds]) => ({ screenId, permissionIds }));
     this.client.updateRolePermissions(roleId, { permissions }).subscribe({

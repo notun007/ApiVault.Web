@@ -93,6 +93,9 @@ export interface PagedResult<T> {
 export type ApiCatalogSortField = 'Name' | 'Ownership' | 'Protocol' | 'Business' | 'CurrentRelease' | 'Versions';
 
 export interface ApiSearchQuery {
+  managementOnly?: boolean;
+  executionOnly?: boolean;
+  deletedOnly?: boolean;
   search?: string;
   ownershipType?: ApiOwnershipType | '';
   protocol?: ApiProtocol | '';

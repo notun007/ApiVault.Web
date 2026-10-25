@@ -1,3 +1,4 @@
+import { confirmMutation } from '../../shared/confirm-mutation';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -39,6 +40,7 @@ export class UsersComponent {
   openCreate(): void { this.form.reset({ username: '', displayName: '', email: '', password: '', role: UserRole.Viewer }); this.modalError.set(''); this.modalOpen.set(true); }
   save(): void {
     if (this.form.invalid || this.saving()) { this.form.markAllAsTouched(); return; }
+    if (!confirmMutation('create', 'this user account')) return;
     const value = this.form.getRawValue(); this.saving.set(true);
     this.client.createUser({ ...value, email: value.email || null }).subscribe({
       next: () => { this.saving.set(false); this.modalOpen.set(false); this.toast.success('User created'); this.load(); },

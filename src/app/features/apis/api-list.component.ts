@@ -1,6 +1,9 @@
+import { confirmMutation } from '../../shared/confirm-mutation';
+import { ToastService } from '../../core/services/toast.service';
+import { CatalogPermissionsService } from '../../core/services/catalog-permissions.service';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import {
   ApiLifecycleStatus,
@@ -27,8 +30,13 @@ import { EnumLabelPipe } from '../../shared/pipes/enum-label.pipe';
   styleUrl: './api-list.component.scss'
 })
 export class ApiListComponent {
+  private readonly toast = inject(ToastService);
+  readonly viewer = !!inject(ActivatedRoute).snapshot.data['viewer'];
+  readonly deletedOnly = signal(false);
+  readonly recordRoot = this.viewer ? '/api-explorer' : '/apis';
   private readonly fb = inject(FormBuilder);
   private readonly apiClient = inject(ApiCatalogClient);
+  readonly catalogPermissions = inject(CatalogPermissionsService);
   private readonly projectClient = inject(ProjectClient);
   private readonly auth = inject(AuthService);
 
@@ -43,7 +51,7 @@ export class ApiListComponent {
   readonly sortDescending = signal(false);
   readonly firstVisibleRecord = computed(() => this.result().totalCount === 0 ? 0 : ((this.result().page - 1) * this.result().pageSize) + 1);
   readonly lastVisibleRecord = computed(() => Math.min(this.result().page * this.result().pageSize, this.result().totalCount));
-  readonly canManage = () => this.auth.hasAnyRole(UserRole.Admin, UserRole.ApiOwner);
+  readonly canManage = () => !this.viewer && this.catalogPermissions.canRegisterApi();
 
   readonly filters = this.fb.nonNullable.group({
     search: '',
@@ -54,6 +62,7 @@ export class ApiListComponent {
   });
 
   constructor() {
+    this.catalogPermissions.load();
     this.projectClient.getAll(true).subscribe((items) => this.applications.set(items));
     this.search(1);
   }
@@ -62,6 +71,7 @@ export class ApiListComponent {
     this.loading.set(true);
     const filters = this.filters.getRawValue();
     const query: ApiSearchQuery = {
+      managementOnly: !this.viewer, deletedOnly: this.deletedOnly(),
       search: filters.search,
       ownershipType: filters.ownershipType as ApiOwnershipType | '',
       protocol: filters.protocol as ApiProtocol | '',
@@ -79,6 +89,11 @@ export class ApiListComponent {
     });
   }
 
+  restore(id: string): void {
+    if (!this.catalogPermissions.canDelete(id)) return;
+    if (!confirmMutation('update', 'this API to restore its catalog visibility')) return;
+    this.apiClient.restore(id).subscribe({ next: () => { this.toast.success('API restored'); this.search(1); }, error: () => this.toast.error('Restore failed') });
+  }
   reset(): void {
     this.filters.reset();
     this.search(1);

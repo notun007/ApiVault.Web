@@ -200,3 +200,11 @@ feature.component.scss
 ```
 
 The TypeScript files contain component logic only. Templates are stored in HTML files, and each component has its own SCSS file. The existing shared design system remains in `src/styles.scss` to preserve the original UI and behavior exactly.
+
+## Mutation confirmations
+
+Create and update submissions ask for confirmation after validation and before setting busy state or calling the API. Cancel keeps the form values and sends no request. This includes API records, releases, lifecycle changes, endpoints, environments, secrets, authentication profiles, applications, links, vendors, users, passwords, roles, permissions, API access, and workspace menu saves. Business-area deletion retains its existing explicit confirmation modal without adding a duplicate prompt.
+
+Sign-in, reading/filtering, and test execution keep their existing behavior. Draft edits are confirmed when saved. Confirmation text contains action and record labels, never passwords, secret values, or request bodies.
+
+Run `node scripts/confirmation-smoke.cjs` to audit current mutation call sites and check accepted/cancelled submissions, validation, form preservation, and busy state.
