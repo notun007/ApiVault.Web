@@ -3,13 +3,16 @@
   @if (canManage()) { <a class="button button-primary" routerLink="/apis/new">+ Register API</a> }
 </app-page-header>
 
-@if (!viewer) { <div class="catalog-mode" style="display:flex;gap:.75rem;margin-bottom:1rem"><button type="button" class="button button-ghost button-small" [disabled]="!deletedOnly()" (click)="deletedOnly.set(false); search(1)">Active APIs</button><button type="button" class="button button-ghost button-small" [disabled]="deletedOnly()" (click)="deletedOnly.set(true); search(1)">Deleted APIs</button></div> }
+@if (!viewer) { <div class="catalog-mode" role="tablist" aria-label="Catalog visibility"><button type="button" class="catalog-mode-tab" role="tab" [class.active]="!deletedOnly()" [attr.aria-selected]="!deletedOnly()" (click)="deletedOnly.set(false); search(1)">Active APIs</button><button type="button" class="catalog-mode-tab" role="tab" [class.active]="deletedOnly()" [attr.aria-selected]="deletedOnly()" (click)="deletedOnly.set(true); search(1)">Deleted APIs</button></div> }
 <section class="panel filter-panel">
   <header class="filter-panel-header">
-    <h2>Filters</h2>
+    <div class="filter-panel-title">
+      <span class="filter-heading-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16l-6.2 7.1V18l-3.6 1.8v-7.7L4 5Z"></path></svg></span>
+      <h2>Filters</h2>
+    </div>
     <button class="filter-toggle" type="button" aria-controls="api-catalog-filters" [attr.aria-expanded]="filtersExpanded()" (click)="toggleFilters()">
       {{ filtersExpanded() ? 'Hide filters' : 'Show filters' }}
-      <span class="filter-toggle-icon" aria-hidden="true">{{ filtersExpanded() ? '⌃' : '⌄' }}</span>
+      <svg class="filter-toggle-icon" [class.open]="filtersExpanded()" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9.5 5 5 5-5"></path></svg>
     </button>
   </header>
   @if (filtersExpanded()) {
@@ -44,11 +47,11 @@
         <tbody>
           @for (api of result().items; track api.id) {
             <tr>
-              <td><a class="table-link" [routerLink]="[recordRoot, api.id]">{{ api.name }}</a></td>
+              <td><a class="table-link api-name" [routerLink]="[recordRoot, api.id]">{{ api.name }}</a></td>
               <td><span class="badge" [class.badge-blue]="api.ownershipType === 'ThirdParty'">{{ api.ownershipType | enumLabel }}</span></td>
               <td>{{ api.protocol | enumLabel }}</td>
               <td><strong class="cell-strong">{{ api.businessArea }}</strong></td>
-              <td><strong class="cell-strong">{{ api.currentVersion || 'Not released' }}</strong></td>
+              <td><strong class="cell-strong current-release" [class.unreleased]="!api.currentVersion">{{ api.currentVersion || 'Not released' }}</strong></td>
               <td>
                 @if (api.versionCount > 1 && !deletedOnly()) {
                   <a class="version-compare-link" [routerLink]="['/apis', api.id, 'compare']" [attr.aria-label]="'Compare ' + api.versionCount + ' versions of ' + api.name">

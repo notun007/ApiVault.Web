@@ -10,8 +10,13 @@
 
     <div class="sidebar-body">
       <div class="sidebar-context">
-        <span class="context-label">Workspace</span>
-        <strong>{{ runtime.config().organizationName }}</strong>
+        <span class="context-label"></span>
+        <div class="context-value">
+          <span class="context-icon organization-logo" aria-hidden="true">
+            <img src="/images/southeast-bank-logo.jpeg" alt="">
+          </span>
+          <strong>{{ runtime.config().organizationName }}</strong>
+        </div>
       </div>
 
       <nav id="primary-navigation" class="main-nav" aria-label="Primary navigation">

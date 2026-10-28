@@ -12,7 +12,7 @@ const APP_CONFIG: AppConfig = {
   apiBaseUrl: 'https://localhost:44315',
   //apiBaseUrl: 'http://172.17.1.227:8025', 
   applicationName: 'ApiVault',
-  organizationName: 'Banking Organization',
+  organizationName: 'Southeast Bank PLC',
   sessionStorageKey: 'apivault.session'
 };
 

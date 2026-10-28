@@ -21,7 +21,7 @@
             <th [attr.aria-sort]="sortAria('ownershipType')"><button class="sort-button" type="button" (click)="changeSort('ownershipType')">Provider <span class="sort-indicator">{{ sortField() === 'ownershipType' ? (sortDirection() === 'desc' ? '↓' : '↑') : '↕' }}</span></button></th>
             <th [attr.aria-sort]="sortAria('apiRole')"><button class="sort-button" type="button" (click)="changeSort('apiRole')">API role <span class="sort-indicator">{{ sortField() === 'apiRole' ? (sortDirection() === 'desc' ? '↓' : '↑') : '↕' }}</span></button></th>
             <th [attr.aria-sort]="sortAria('criticality')"><button class="sort-button" type="button" (click)="changeSort('criticality')">Criticality <span class="sort-indicator">{{ sortField() === 'criticality' ? (sortDirection() === 'desc' ? '↓' : '↑') : '↕' }}</span></button></th>
-            <th><span class="visually-hidden">Actions</span></th>
+            <th class="actions-header">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -32,7 +32,7 @@
               <td><span class="table-value">{{ application.ownershipType === 'ThirdParty' ? 'Third Party' : 'Internal' }}</span>@if (application.vendorName) { <small>{{ application.vendorName }}</small> }</td>
               <td><span class="table-value">{{ roleLabel(application) }}</span></td>
               <td><span class="table-value">{{ application.criticality }}</span></td>
-              <td class="actions-cell"><div class="row-actions"><a class="button button-ghost button-small" [routerLink]="['/projects', application.id]">Open</a>@if (canManage()) { <button class="button button-ghost button-small" type="button" (click)="openEdit(application, $event)">Edit</button> }</div></td>
+              <td class="actions-cell"><div class="row-actions"><a class="button button-secondary button-small" [routerLink]="['/projects', application.id]">Open</a>@if (canManage()) { <button class="button button-ghost button-small" type="button" (click)="openEdit(application, $event)">Edit</button> }</div></td>
             </tr>
           }
         </tbody>

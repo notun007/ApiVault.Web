@@ -53,11 +53,29 @@ th[aria-sort='descending'] .sort-button {
 }
 
 .application-table {
-  min-width: 820px;
+  min-width: 920px;
+  table-layout: fixed;
 }
 
 .application-table th,
 .application-table td {
+  overflow-wrap: break-word;
+}
+
+.application-table th:nth-child(1) { width: 26%; }
+.application-table th:nth-child(2) { width: 18%; }
+.application-table th:nth-child(3) { width: 12%; }
+.application-table th:nth-child(4) { width: 17%; }
+.application-table th:nth-child(5) { width: 11%; }
+.application-table th:nth-child(6) { width: 16%; }
+
+.application-table .actions-header {
+  padding-right: 22px;
+  text-align: right;
+}
+
+.application-table .actions-cell {
+  padding-right: 22px;
   white-space: nowrap;
 }
 
@@ -89,6 +107,10 @@ th[aria-sort='descending'] .sort-button {
   gap: 6px;
 }
 
+.row-actions .button {
+  flex: 0 0 auto;
+}
+
 .application-pagination {
   margin-top: 0;
 }
@@ -98,10 +120,6 @@ th[aria-sort='descending'] .sort-button {
 }
 
 @media (max-width: 640px) {
-  .application-table {
-    min-width: 760px;
-  }
-
   .application-pagination,
   .pagination-controls {
     align-items: flex-start;
