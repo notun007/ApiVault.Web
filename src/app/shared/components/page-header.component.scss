@@ -6,8 +6,12 @@
 .page-header {
   align-items: center;
   gap: 18px;
-  min-height: 42px;
+  min-height: 46px;
   margin-bottom: 12px;
+}
+
+.page-actions {
+  align-self: center;
 }
 
 .page-header h1 {

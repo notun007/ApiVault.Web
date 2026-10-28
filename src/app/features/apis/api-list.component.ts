@@ -1,10 +1,7 @@
-import { confirmMutation } from '../../shared/confirm-mutation';
-import { ToastService } from '../../core/services/toast.service';
 import { CatalogPermissionsService } from '../../core/services/catalog-permissions.service';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { AuthService } from '../../core/auth/auth.service';
 import {
   ApiLifecycleStatus,
   ApiOwnershipType,
@@ -14,7 +11,6 @@ import {
   ApiSummaryResponse,
   PagedResult
 } from '../../core/models/api.models';
-import { UserRole } from '../../core/models/security.models';
 import { ApiCatalogClient } from '../../core/services/api-catalog.client';
 import { ProjectSummaryResponse } from '../../core/models/project.models';
 import { ProjectClient } from '../../core/services/project.client';
@@ -30,15 +26,12 @@ import { EnumLabelPipe } from '../../shared/pipes/enum-label.pipe';
   styleUrl: './api-list.component.scss'
 })
 export class ApiListComponent {
-  private readonly toast = inject(ToastService);
   readonly viewer = !!inject(ActivatedRoute).snapshot.data['viewer'];
-  readonly deletedOnly = signal(false);
   readonly recordRoot = this.viewer ? '/api-explorer' : '/apis';
   private readonly fb = inject(FormBuilder);
   private readonly apiClient = inject(ApiCatalogClient);
   readonly catalogPermissions = inject(CatalogPermissionsService);
   private readonly projectClient = inject(ProjectClient);
-  private readonly auth = inject(AuthService);
 
   readonly ownershipTypes = Object.values(ApiOwnershipType);
   readonly protocols = Object.values(ApiProtocol);
@@ -71,7 +64,7 @@ export class ApiListComponent {
     this.loading.set(true);
     const filters = this.filters.getRawValue();
     const query: ApiSearchQuery = {
-      managementOnly: !this.viewer, deletedOnly: this.deletedOnly(),
+      managementOnly: !this.viewer,
       search: filters.search,
       ownershipType: filters.ownershipType as ApiOwnershipType | '',
       protocol: filters.protocol as ApiProtocol | '',
@@ -89,11 +82,6 @@ export class ApiListComponent {
     });
   }
 
-  restore(id: string): void {
-    if (!this.catalogPermissions.canDelete(id)) return;
-    if (!confirmMutation('update', 'this API to restore its catalog visibility')) return;
-    this.apiClient.restore(id).subscribe({ next: () => { this.toast.success('API restored'); this.search(1); }, error: () => this.toast.error('Restore failed') });
-  }
   reset(): void {
     this.filters.reset();
     this.search(1);

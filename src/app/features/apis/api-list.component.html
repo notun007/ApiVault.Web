@@ -3,7 +3,6 @@
   @if (canManage()) { <a class="button button-primary" routerLink="/apis/new">+ Register API</a> }
 </app-page-header>
 
-@if (!viewer) { <div class="catalog-mode" role="tablist" aria-label="Catalog visibility"><button type="button" class="catalog-mode-tab" role="tab" [class.active]="!deletedOnly()" [attr.aria-selected]="!deletedOnly()" (click)="deletedOnly.set(false); search(1)">Active APIs</button><button type="button" class="catalog-mode-tab" role="tab" [class.active]="deletedOnly()" [attr.aria-selected]="deletedOnly()" (click)="deletedOnly.set(true); search(1)">Deleted APIs</button></div> }
 <section class="panel filter-panel">
   <header class="filter-panel-header">
     <div class="filter-panel-title">
@@ -53,7 +52,7 @@
               <td><strong class="cell-strong">{{ api.businessArea }}</strong></td>
               <td><strong class="cell-strong current-release" [class.unreleased]="!api.currentVersion">{{ api.currentVersion || 'Not released' }}</strong></td>
               <td>
-                @if (api.versionCount > 1 && !deletedOnly()) {
+                @if (api.versionCount > 1) {
                   <a class="version-compare-link" [routerLink]="['/apis', api.id, 'compare']" [attr.aria-label]="'Compare ' + api.versionCount + ' versions of ' + api.name">
                     <strong>{{ api.versionCount }}</strong><span>Compare</span>
                   </a>
@@ -63,7 +62,7 @@
               </td>
               <td class="actions-cell">
                 <div class="grid-actions">
-                  @if (deletedOnly()) { @if (catalogPermissions.canDelete(api.id)) { <button type="button" class="button button-ghost button-small" (click)="restore(api.id)">Restore</button> } } @else { <a class="button button-ghost button-small" [routerLink]="[recordRoot, api.id]">Open</a> }
+                  <a class="button button-ghost button-small" [routerLink]="[recordRoot, api.id]">Open</a>
                 </div>
               </td>
             </tr>

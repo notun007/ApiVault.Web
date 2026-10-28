@@ -101,44 +101,6 @@
   gap: 10px 12px;
 }
 
-.catalog-mode {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-
-.catalog-mode-tab {
-  min-height: 36px;
-  padding: 7px 14px;
-  border: 1px solid #d5e3ed;
-  border-radius: 8px;
-  color: #6b7b8e;
-  background: rgba(255, 255, 255, 0.55);
-  cursor: pointer;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
-}
-
-.catalog-mode-tab:hover {
-  color: #1e5b86;
-  border-color: #b9d5e5;
-  background: #f5fafd;
-}
-
-.catalog-mode-tab.active {
-  color: #174f73;
-  border-color: #a9cde5;
-  background: #e5f1f8;
-  box-shadow: inset 0 -2px #0a9bb0;
-}
-
-.catalog-mode-tab:focus-visible {
-  outline: 2px solid rgba(10, 155, 176, 0.5);
-  outline-offset: 2px;
-}
-
 .api-grid-panel .table-wrap {
   margin: 0;
 }
@@ -342,14 +304,6 @@ th[aria-sort='descending'] .sort-button {
 }
 
 @media (max-width: 600px) {
-  .catalog-mode {
-    overflow-x: auto;
-  }
-
-  .catalog-mode-tab {
-    flex: 0 0 auto;
-  }
-
   .filter-panel {
     padding-inline: 14px;
   }
@@ -376,7 +330,6 @@ th[aria-sort='descending'] .sort-button {
 
 @media (prefers-reduced-motion: reduce) {
   .filter-toggle-icon,
-  .catalog-mode-tab,
   .api-grid-panel tbody tr {
     transition: none;
   }

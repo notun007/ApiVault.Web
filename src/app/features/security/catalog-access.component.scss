@@ -79,15 +79,18 @@
 
 .save-bar {
   position: sticky;
-  bottom: 1rem;
+  bottom: .75rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  padding: 1rem 1.25rem;
-  box-shadow: 0 4px 20px #0b413414;
+  padding: .7rem 1rem;
+  border-radius: 12px;
+  box-shadow: 0 5px 16px rgba(31, 75, 106, .065);
 }
 .save-bar > div { display: flex; gap: .75rem; }
+.save-bar > span { color: var(--ink-soft); font-size: 12px; }
+.save-bar .button { min-height: 35px; padding: 7px 13px; }
 
 @media (max-width: 1240px) {
   .assignment-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }

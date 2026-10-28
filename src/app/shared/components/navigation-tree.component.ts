@@ -33,12 +33,11 @@ import { MenuIconComponent } from './menu-icon.component';
     :host{display:block}ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}li{min-width:0}.nested{position:relative;margin:3px 0 9px 16px;padding:0 0 0 13px;border-left:1px solid #c9dce8}
     a,.group{box-sizing:border-box;position:relative;display:flex;align-items:center;gap:11px;width:100%;min-height:42px;padding:9px 11px;border:1px solid transparent;border-radius:8px;background:transparent;color:#233f59;text-align:left;text-decoration:none;font:inherit;font-size:12px;line-height:1.25;cursor:pointer;transition:color .16s ease,background .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease}
     .group{font-weight:700;color:#183c5c}a{font-weight:520}a:hover,.group:hover{border-color:#e0ebf1;background:rgba(255,255,255,.78);color:#0f5278}a:hover{transform:translateX(1px)}
-    a.active{border-color:#c9e0eb;background:#e5f1f8;box-shadow:inset 3px 0 #0aa0b1,0 2px 6px rgba(31,75,106,.045);color:#0d5b82;font-weight:700}.contains-active{color:#0b6489}
-    a.active::after{content:'';position:absolute;right:10px;width:5px;height:5px;border-radius:50%;background:#17a6b5;box-shadow:0 0 0 3px rgba(23,166,181,.1)}
+    a.active{border-color:#c5dde8;background:#e7f3f7;box-shadow:inset 3px 0 #0aa0b1,0 2px 6px rgba(31,75,106,.045);color:#0d5b82;font-weight:700}.contains-active{color:#0b6489}
     app-menu-icon{flex:0 0 auto;color:#316f98;transition:color .16s ease}.group app-menu-icon{color:#2c739f}a:hover app-menu-icon,.group:hover app-menu-icon,a.active app-menu-icon{color:#0b8298}
     .label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.chevron{width:14px;height:14px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .18s ease}.chevron.open{transform:rotate(90deg)}
     a:focus-visible,.group:focus-visible{outline:2px solid rgba(10,155,176,.55);outline-offset:2px}
-    :host(.compact) ul{gap:6px}:host(.compact) .label,:host(.compact) .chevron{display:none}:host(.compact) a,:host(.compact) .group{justify-content:center;min-height:44px;padding:10px}:host(.compact) a.active,:host(.compact) .group.contains-active{border-color:#c9e0eb;background:#e5f1f8;box-shadow:inset 0 3px #0aa0b1}:host(.compact) a.active::after{display:none}
+    :host(.compact) ul{gap:6px}:host(.compact) .label,:host(.compact) .chevron{display:none}:host(.compact) a,:host(.compact) .group{justify-content:center;min-height:44px;padding:10px}:host(.compact) a.active,:host(.compact) .group.contains-active{border-color:#c5dde8;background:#e7f3f7;box-shadow:inset 0 3px #0aa0b1}
     @media(prefers-reduced-motion:reduce){a,.group,.chevron,app-menu-icon{transition:none}a:hover{transform:none}}
   `],
   host:{'[class.compact]':'compact()'}

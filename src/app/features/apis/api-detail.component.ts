@@ -62,9 +62,9 @@ export class ApiDetailComponent {
   readonly canTest = () => !this.viewer && this.auth.hasAnyRole(UserRole.Admin, UserRole.ApiOwner, UserRole.Tester);
   deleteApi(): void {
     if (this.viewer || this.deleting() || !this.catalogPermissions.canDelete(this.id)) return;
-    if (!confirmMutation('delete', `${this.api()?.name ?? 'this API'} from the active catalog (it can be restored from Deleted APIs)`)) return;
+    if (!confirmMutation('delete', `${this.api()?.name ?? 'this API'} from the active catalog`)) return;
     this.deleting.set(true);
-    this.apiClient.remove(this.id).subscribe({ next: () => { this.toast.success('API moved to Deleted APIs'); void this.router.navigate(['/apis']); }, error: () => { this.deleting.set(false); this.toast.error('Could not delete API'); } });
+    this.apiClient.remove(this.id).subscribe({ next: () => { this.toast.success('API removed from the active catalog'); void this.router.navigate(['/apis']); }, error: () => { this.deleting.set(false); this.toast.error('Could not delete API'); } });
   }
   readonly lifecycleStatuses = Object.values(ApiLifecycleStatus);
   readonly authenticationTypes = Object.values(AuthenticationType);
